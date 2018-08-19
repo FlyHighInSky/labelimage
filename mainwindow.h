@@ -55,7 +55,15 @@
 #include <QImage>
 #ifndef QT_NO_PRINTER
 #include <QPrinter>
+#include <QTreeView>
+#include <QGraphicsView>
+#include <QFileSystemModel>
+#include <QSplitter>
+#include <QHBoxLayout>
 #endif
+#include "imagelabeler.h"
+#include "imagelabelwidget.h"
+#include "viewscene.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -66,28 +74,30 @@ class QScrollBar;
 QT_END_NAMESPACE
 
 //! [0]
-class ImageViewer : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    ImageViewer();
-    bool loadFile(const QString &);
+    MainWindow();
 
 private slots:
-    void open();
-    void saveAs();
-    void print();
+    void openFolder();
     void copy();
     void paste();
     void zoomIn();
     void zoomOut();
-    void normalSize();
-    void fitToWindow();
+    void fitViewToWindow();
+    void fitViewToActual();
+    void fullScreen();
     void about();
+    void onFileSelected(const QItemSelection& selected, const QItemSelection& deselected);
 
 private:
+    void wheelEvent(QWheelEvent *event);
+    void resizeEvent(QResizeEvent* event);
     void createActions();
+    void createCentralWindow();
     void createMenus();
     void updateActions();
     bool saveFile(const QString &fileName);
@@ -95,8 +105,19 @@ private:
     void scaleImage(double factor);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
+    QWidget *centralWidget;
+    QAction *fitToWindowAct;
     QImage image;
-    QLabel *imageLabel;
+    QHBoxLayout *horizontalLayout;
+    QSplitter *mainSplitter;
+    QTreeView *fileListView;
+    QGraphicsView *imageView;
+    ViewScene *scene = nullptr;
+    QFileSystemModel *fileListModel;
+    QStringList filters;
+    bool isImageLoaded =  false;
+    ImageLabeler *imageLabeler = nullptr;
+    ImageLabelWidget *imageLabel;
     QScrollArea *scrollArea;
     double scaleFactor;
 
@@ -104,13 +125,9 @@ private:
     QPrinter printer;
 #endif
 
-    QAction *saveAsAct;
-    QAction *printAct;
     QAction *copyAct;
     QAction *zoomInAct;
     QAction *zoomOutAct;
-    QAction *normalSizeAct;
-    QAction *fitToWindowAct;
 };
 //! [0]
 
