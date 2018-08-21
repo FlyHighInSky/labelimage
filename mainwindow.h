@@ -61,8 +61,6 @@
 #include <QSplitter>
 #include <QHBoxLayout>
 #endif
-#include "imagelabeler.h"
-#include "imagelabelwidget.h"
 #include "viewscene.h"
 
 QT_BEGIN_NAMESPACE
@@ -100,8 +98,6 @@ private:
     void createCentralWindow();
     void createMenus();
     void updateActions();
-    bool saveFile(const QString &fileName);
-    void setImage(const QImage &newImage);
     void scaleImage(double factor);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
@@ -116,14 +112,8 @@ private:
     QFileSystemModel *fileListModel;
     QStringList filters;
     bool isImageLoaded =  false;
-    ImageLabeler *imageLabeler = nullptr;
-    ImageLabelWidget *imageLabel;
     QScrollArea *scrollArea;
     double scaleFactor;
-
-#ifndef QT_NO_PRINTER
-    QPrinter printer;
-#endif
 
     QAction *copyAct;
     QAction *zoomInAct;

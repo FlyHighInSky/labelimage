@@ -7,7 +7,7 @@
 #include <QAction>
 #include <QGraphicsView>
 #include <QKeyEvent>
-#include "UndoHistory.h"
+#include "undohistory.h"
 #include "boxitem.h"
 
 class ViewScene : public QGraphicsScene

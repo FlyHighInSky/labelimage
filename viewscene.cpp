@@ -16,7 +16,7 @@ void ViewScene::loadImage(QString path)
 }
 void ViewScene::drawView()
 {
-    this->clear();
+//    this->clear();
 
     // Actual image layer.
     auto pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*history.current()));
@@ -48,10 +48,28 @@ void ViewScene::drawView()
 
 void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (event->buttons() != Qt::LeftButton)
-        return;
-    leftTopPoint = event->scenePos();
-    isDrawing = true;
+    QGraphicsScene::mousePressEvent(event);
+    if (event->button() == Qt::LeftButton) {
+            if (event->modifiers() == Qt::ShiftModifier) {
+                leftTopPoint = event->scenePos();
+                isDrawing = true;
+            } else {
+                ;
+            }
+    }
+
+//    // check items under curse
+//    QGraphicsItem *selectedIteme = NULL;
+//    foreach (QGraphicsItem *item, items(event->scenePos())) {
+//        if (item->type() == QGraphicsItem::UserType+1) {
+//            selectedIteme = item;
+//            break;
+//        }
+//    }
+//    // 从 Scene 上移除 item
+//    if (selectedIteme != NULL)
+//        removeItem(selectedIteme);
+
 }
 
 void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -84,7 +102,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 //    }
     if(isDrawing) {
         if(!boxToDraw) {
-            boxToDraw = new BoxItem;
+            boxToDraw = new BoxItem(this->sceneRect());
             addItem(boxToDraw);
         }
         rightBottomPoint = event->scenePos();
@@ -105,6 +123,8 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         boxToDraw->setRect(roi);
     }
+
+    QGraphicsScene::mouseMoveEvent(event);
 }
 
 void ViewScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)

@@ -65,8 +65,6 @@
 #endif
 
 #include "mainwindow.h"
-#include "imagelabelwidget.h"
-#include "ImageLabeler.h"
 
 //! [0]
 MainWindow::MainWindow()
@@ -89,40 +87,6 @@ MainWindow::MainWindow()
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
 }
 
-void MainWindow::setImage(const QImage &newImage)
-{
-    image = newImage;
-//    imageLabel->setPixmap(QPixmap::fromImage(image));
-    imageLabel->setImage(image);
-//! [4]
-    scaleFactor = 1.0;
-
-    scrollArea->setVisible(true);
-    fitToWindowAct->setEnabled(true);
-    updateActions();
-
-    if (!fitToWindowAct->isChecked())
-        imageLabel->adjustSize();
-}
-
-//! [4]
-
-bool MainWindow::saveFile(const QString &fileName)
-{
-    QImageWriter writer(fileName);
-
-    if (!writer.write(image)) {
-        QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
-                                 tr("Cannot write %1: %2")
-                                 .arg(QDir::toNativeSeparators(fileName)), writer.errorString());
-        return false;
-    }
-    const QString message = tr("Wrote \"%1\"").arg(QDir::toNativeSeparators(fileName));
-    statusBar()->showMessage(message);
-    return true;
-}
-
-//! [1]
 
 static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode)
 {
@@ -198,7 +162,7 @@ void MainWindow::paste()
     if (newImage.isNull()) {
         statusBar()->showMessage(tr("No image in clipboard"));
     } else {
-        setImage(newImage);
+//        setImage(newImage);
         setWindowFilePath(QString());
         const QString message = tr("Obtained image from clipboard, %1x%2, Depth: %3")
             .arg(newImage.width()).arg(newImage.height()).arg(newImage.depth());
@@ -377,6 +341,7 @@ void MainWindow::createCentralWindow()
     horizontalLayout = new QHBoxLayout(centralWidget);
     fileListView = new QTreeView(this);
     imageView = new QGraphicsView(this);
+    imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     scene = new ViewScene(this);
 
     fileListModel = new QFileSystemModel(this);
