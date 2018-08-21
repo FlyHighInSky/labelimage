@@ -191,26 +191,6 @@
 //    this->setPos(_location);
 //}
 
-//// remove the corner grabbers
-//void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent * )
-//{
-//    _color = Qt::black;
-//    for (int i=TopLeft; i<=LeftCenter; i++) {
-//        _corners[i]->setParentItem(NULL);
-//        delete _corners[i];
-//    }
-//}
-
-//// create the corner grabbers
-//void BoxItem::hoverEnterEvent ( QGraphicsSceneHoverEvent * )
-//{
-//    _color = Qt::red;
-//    for (int i=TopLeft; i<=LeftCenter; i++) {
-//        _corners[i] = new CornerGrabber(this,i,_grabberWidth,_grabberHeight);
-//        _corners[i]->installSceneEventFilter(this);
-//    }
-//    setCornerPositions();
-//}
 
 //void BoxItem::setRect(const QRectF &rect)
 //{
@@ -419,12 +399,10 @@
 
 BoxItem::BoxItem(QRectF fatherRect):
     _text(),
-    _color(Qt::black),
+    _color(Qt::red),
     _pen(),
-//    _oldBox(0,00),
     _dragStart(0,0),
     _fatherRect(fatherRect),
-    _cornerDragStart(0,0),
     _grabberWidth(20),
     _grabberHeight(20),
     _drawingRegion()
@@ -434,7 +412,8 @@ BoxItem::BoxItem(QRectF fatherRect):
     //    _text.setPos(35,35);
     //    _text.setPlainText("text goes here");
     //    _text.setParentItem(this);
-//    setRect(_box);
+    //    setRect(_box);
+    this->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable);
     this->setAcceptHoverEvents(true);
 }
 
@@ -447,107 +426,107 @@ BoxItem::BoxItem(QRectF fatherRect):
   */
 bool BoxItem::sceneEventFilter ( QGraphicsItem * watched, QEvent * event )
 {
-//    switch ( event->type() ) // if the mouse went down, record the x,y coords of the press, record it inside the corner object
-//    {
-//    case QEvent::GraphicsSceneMousePress: {
-////            _stretchRectState = getStrethRectState(event->Scence());
-////            if (_stretchRectState != None) {
-//////                m_currentCaptureState = BeginMoveStretchRect;
-////                setStretchCursorStyle(_stretchRectState);// 当前鼠标在拖动选中区顶点时,设置鼠标当前状态;
-//////                m_beginMovePoint = event->pos();
-////            }
-//////            else if (isPressPointInSelectRect(event->pos()))// 是否在选中的矩形中;
-//////            {
-//////                m_currentCaptureState = BeginMoveCaptureArea;
-//////                m_beginMovePoint = event->pos();
-//////            }
-//        }
-//        break;
-//    case QEvent::GraphicsSceneMouseRelease: {
-//        corner->setMouseState(CornerGrabber::kMouseReleased);
-//    }
-//        break;
-//    case QEvent::GraphicsSceneMouseMove: {
-//        corner->setMouseState(CornerGrabber::kMouseMoving );
-//    }
-//        break;
-//    default: // we dont care about the rest of the events
-//        return false;
-//    }
+    //    switch ( event->type() ) // if the mouse went down, record the x,y coords of the press, record it inside the corner object
+    //    {
+    //    case QEvent::GraphicsSceneMousePress: {
+    ////            _stretchRectState = getStrethRectState(event->Scence());
+    ////            if (_stretchRectState != None) {
+    //////                m_currentCaptureState = BeginMoveStretchRect;
+    ////                setStretchCursorStyle(_stretchRectState);// 当前鼠标在拖动选中区顶点时,设置鼠标当前状态;
+    //////                m_beginMovePoint = event->pos();
+    ////            }
+    //////            else if (isPressPointInSelectRect(event->pos()))// 是否在选中的矩形中;
+    //////            {
+    //////                m_currentCaptureState = BeginMoveCaptureArea;
+    //////                m_beginMovePoint = event->pos();
+    //////            }
+    //        }
+    //        break;
+    //    case QEvent::GraphicsSceneMouseRelease: {
+    //        corner->setMouseState(CornerGrabber::kMouseReleased);
+    //    }
+    //        break;
+    //    case QEvent::GraphicsSceneMouseMove: {
+    //        corner->setMouseState(CornerGrabber::kMouseMoving );
+    //    }
+    //        break;
+    //    default: // we dont care about the rest of the events
+    //        return false;
+    //    }
 
-//    if ( corner->getMouseState() == CornerGrabber::kMouseMoving ) {
-//        int dx = mevent->pos().x() - corner->mouseDownX;
-//        int dy = mevent->pos().y() - corner->mouseDownY;
+    //    if ( corner->getMouseState() == CornerGrabber::kMouseMoving ) {
+    //        int dx = mevent->pos().x() - corner->mouseDownX;
+    //        int dy = mevent->pos().y() - corner->mouseDownY;
 
-//        // depending on which corner has been grabbed, we want to move the position
-//        // of the item as it grows/shrinks accordingly. so we need to eitehr add
-//        // or subtract the offsets based on which corner this is.
-//        qreal left = _box.left(), top = _box.top();
-//        qreal right = _box.right(), bottom = _box.bottom();
-//        switch( corner->getCorner() )
-//        {
-//        case TopLeft:
-//        {
-//            left = qMin(left+dx, right);
-//            right = qMax(left+dx, right);
-//            top = qMin(top+dy, bottom);
-//            bottom = qMax(top+dy, bottom);
-//        }
-//            break;
-//        case TopCenter:
-//        {
-//            top = qMin(top+dy, bottom);
-//            bottom = qMax(top+dy, bottom);
-//        }
-//            break;
-//        case TopRight:
-//        {
-//            left = qMin(left, right+dx);
-//            right = qMax(left, right+dx);
-//            top = qMin(top+dy, bottom);
-//            bottom = qMax(top+dy, bottom);
-//        }
-//            break;
-//        case RightCenter:
-//        {
-//            left = qMin(left, right+dx);
-//            right = qMax(left, right+dx);
-//        }
-//            break;
-//        case BottomRight:
-//        {
-//            left = qMin(left, right+dx);
-//            right = qMax(left, right+dx);
-//            top = qMin(top, bottom+dy);
-//            bottom = qMax(top, bottom+dy);
-//        }
-//            break;
-//        case BottomCenter:
-//        {
-//            top = qMin(top, bottom+dy);
-//            bottom = qMax(top, bottom+dy);
-//        }
-//            break;
-//        case BottomLeft:
-//        {
-//            left = qMin(left+dx, right);
-//            right = qMax(left+dx, right);
-//            top = qMin(top, bottom+dy);
-//            bottom = qMax(top, bottom+dy);
-//        }
-//            break;
-//        case LeftCenter:
-//        {
-//            left = qMin(left+dx, right);
-//            right = qMax(left+dx, right);
-//        }
-//            break;
-//        }
-//        this->setRect(QRectF(left, top, right-left, bottom-top));
-//    }
+    //        // depending on which corner has been grabbed, we want to move the position
+    //        // of the item as it grows/shrinks accordingly. so we need to eitehr add
+    //        // or subtract the offsets based on which corner this is.
+    //        qreal left = _box.left(), top = _box.top();
+    //        qreal right = _box.right(), bottom = _box.bottom();
+    //        switch( corner->getCorner() )
+    //        {
+    //        case TopLeft:
+    //        {
+    //            left = qMin(left+dx, right);
+    //            right = qMax(left+dx, right);
+    //            top = qMin(top+dy, bottom);
+    //            bottom = qMax(top+dy, bottom);
+    //        }
+    //            break;
+    //        case TopCenter:
+    //        {
+    //            top = qMin(top+dy, bottom);
+    //            bottom = qMax(top+dy, bottom);
+    //        }
+    //            break;
+    //        case TopRight:
+    //        {
+    //            left = qMin(left, right+dx);
+    //            right = qMax(left, right+dx);
+    //            top = qMin(top+dy, bottom);
+    //            bottom = qMax(top+dy, bottom);
+    //        }
+    //            break;
+    //        case RightCenter:
+    //        {
+    //            left = qMin(left, right+dx);
+    //            right = qMax(left, right+dx);
+    //        }
+    //            break;
+    //        case BottomRight:
+    //        {
+    //            left = qMin(left, right+dx);
+    //            right = qMax(left, right+dx);
+    //            top = qMin(top, bottom+dy);
+    //            bottom = qMax(top, bottom+dy);
+    //        }
+    //            break;
+    //        case BottomCenter:
+    //        {
+    //            top = qMin(top, bottom+dy);
+    //            bottom = qMax(top, bottom+dy);
+    //        }
+    //            break;
+    //        case BottomLeft:
+    //        {
+    //            left = qMin(left+dx, right);
+    //            right = qMax(left+dx, right);
+    //            top = qMin(top, bottom+dy);
+    //            bottom = qMax(top, bottom+dy);
+    //        }
+    //            break;
+    //        case LeftCenter:
+    //        {
+    //            left = qMin(left+dx, right);
+    //            right = qMax(left+dx, right);
+    //        }
+    //            break;
+    //        }
+    //        this->setRect(QRectF(left, top, right-left, bottom-top));
+    //    }
 
-//    setCornerPositions();
-//    this->update();
+    //    setCornerPositions();
+    //    this->update();
     return true;// true => do not send event to watched - we are finished with this event
 }
 
@@ -575,33 +554,68 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
 void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
 {
     event->setAccepted(true);
-    if (event->button() == Qt::LeftButton) {
+    switch (event->button()) {
+    case Qt::LeftButton:
         _selectedGrabber = getSelectedGrabber(event->pos());
         setGrabberCursor(_selectedGrabber);
 
         _dragStart = event->pos();
-        if (_selectedGrabber != None) { // grabber is selected
+        if (_selectedGrabber != BoxRegion) { // grabber is selected
             _taskStatus = Stretching;
         } else if (_box.contains(event->pos())) { // box is selected
             _taskStatus = Moving;
         }
+        this->setSelected(!this->isSelected());
+//        this->update();
+        break;
+    default:
+        break;
     }
     _oldBox = _box;
-    setSelected(true);
 }
 
 // for supporting moving the box across the scene
 void BoxItem::mouseMoveEvent ( QGraphicsSceneMouseEvent * event )
 {
-    switch (_taskStatus) {
-    case Moving:
-        moveBox(event->pos());
-        break;
-    case Stretching:
-        stretchBox(event->pos());
-        break;
-    default:
-        break;
+    event->setAccepted(true);
+    if (this->isSelected()){
+        switch (_taskStatus) {
+        case Moving:
+            moveBox(event->pos());
+            break;
+        case Stretching:
+            stretchBox(event->pos());
+            break;
+        case Waiting:
+            _selectedGrabber = getSelectedGrabber(event->pos());
+            setGrabberCursor(_selectedGrabber);
+        default:
+            break;
+        }
+    }
+}
+
+void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent *event )
+{
+    if (this->isSelected()){
+        this->setCursor(Qt::ArrowCursor);
+    }
+}
+
+void BoxItem::hoverEnterEvent ( QGraphicsSceneHoverEvent *event )
+{
+    if (this->isSelected()){
+        _selectedGrabber = getSelectedGrabber(event->pos());
+        setGrabberCursor(_selectedGrabber);
+    }
+}
+
+// create the corner grabbers
+void BoxItem::hoverMoveEvent ( QGraphicsSceneHoverEvent *event )
+{
+    if (this->isSelected()){
+        _selectedGrabber = getSelectedGrabber(event->pos());
+        setGrabberCursor(_selectedGrabber);
     }
 }
 
@@ -690,7 +704,7 @@ void BoxItem::setRect(const QRectF &rect)
 {
     prepareGeometryChange();
     _boundingRect.setRect(rect.left()-_grabberWidth/2, rect.top()-_grabberHeight/2,
-                           rect.width()+_grabberWidth, rect.height()+_grabberHeight);
+                          rect.width()+_grabberWidth, rect.height()+_grabberHeight);
 
     _box = rect;
     if (_fatherRect.intersects(_boundingRect)) {
@@ -714,7 +728,7 @@ QRectF BoxItem::boundingRect() const
 }
 
 // example of a drop shadow effect on a box, using QLinearGradient and two boxes
-void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     /*
      The drop shadow effect will be created by drawing a filled, rounded corner rectangle with a gradient fill.
@@ -729,24 +743,32 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *, QWidge
     painter->setPen(_pen);
 
     // draw the top box, the visible one
-    QBrush brush(QColor(0,0,0,0), Qt::SolidPattern);
+    QBrush brush(QColor(255,0,0,0), Qt::SolidPattern);
 
-    painter->setBrush( brush);
+    painter->setBrush(brush);
 
     //    QPointF topLeft (_drawingOrigenX, _drawingOrigenY);
     //    QPointF bottomRight ( _drawingWidth, _drawingHeight);
+    //   QStyleOptionGraphicsItem op;
+    //        op.initFrom(widget);
 
+    // 判断选中时，设置状态为 State_None
+    if (option->state & QStyle::State_Selected) {
+        for (int i=TopLeft; i<=LeftCenter; i++) {
+            painter->fillRect(_grabbers[i], QColor(255, 0, 0, 255));
+        }
+//        painter->fillRect(_grabbers, 8);
+    }
     //    QRectF rect(topLeft, bottomRight);
     painter->drawRect(_box);
-    painter->drawRects(_grabbers, 8);
-//    for (int i=LeftTop; i<=LeftCenter; i++) {
-//        painter->drawRect(_grabbers[i]);
-//    }
+    //    for (int i=LeftTop; i<=LeftCenter; i++) {
+    //        painter->drawRect(_grabbers[i]);
+    //    }
 }
 
 GrabberID BoxItem::getSelectedGrabber(QPointF point)
 {
-    GrabberID ID = None;
+    GrabberID ID = BoxRegion;
     if (_grabbers[TopLeft].contains(point)) {
         ID = TopLeft;
     } else if (_grabbers[TopCenter].contains(point)) {
@@ -764,19 +786,19 @@ GrabberID BoxItem::getSelectedGrabber(QPointF point)
     } else if (_grabbers[LeftCenter].contains(point)) {
         ID = LeftCenter;
     } else if (_box.contains(point)) {
-        ID = None;
+        ID = BoxRegion;
     }
 
     return ID;
 }
 
 // 设置鼠标停在拖拽定点处的样式;
-void BoxItem::setGrabberCursor(GrabberID stretchRectState)
+void BoxItem::setGrabberCursor(GrabberID id)
 {
-    switch (stretchRectState)
+    switch (id)
     {
-    case None:
-        setCursor(Qt::ArrowCursor);
+    case BoxRegion:
+        setCursor(Qt::SizeAllCursor);
         break;
     case TopLeft:
     case BottomRight:
@@ -803,73 +825,73 @@ void BoxItem::setGrabberCursor(GrabberID stretchRectState)
 QRectF BoxItem::getStretchRect()
 {
     QRectF stretchRect;
-//    QRectF currentRect = getRect(m_beginPoint, m_endPoint);
-//    switch (m_stretchRectState)
-//    {
-//    case None:
-//        stretchRect = getRect(m_beginPoint, m_endPoint);
-//        break;
-//    case TopLeft:
-//    {
-//        stretchRect = getRect(currentRect.bottomRight(), m_endMovePoint);
-//    }
-//        break;
-//    case TopRight:
-//    {
-//        QPoint beginPoint = QPoint(currentRect.topLeft().x(), m_endMovePoint.y());
-//        QPoint endPoint = QPoint(m_endMovePoint.x(), currentRect.bottomRight().y());
-//        stretchRect = getRect(beginPoint, endPoint);
-//    }
-//        break;
-//    case BottomLeft:
-//    {
-//        QPoint beginPoint = QPoint(m_endMovePoint.x() , currentRect.topLeft().y());
-//        QPoint endPoint = QPoint(currentRect.bottomRight().x(), m_endMovePoint.y());
-//        stretchRect = getRect(beginPoint, endPoint);
-//    }
-//        break;
-//    case BottomRight:
-//    {
-//        stretchRect = getRect(currentRect.topLeft(), m_endMovePoint);
-//    }
-//        break;
-//    case LeftCenter:
-//    {
-//        QPoint beginPoint = QPoint(m_endMovePoint.x(), currentRect.topLeft().y());
-//        stretchRect = getRect(beginPoint, currentRect.bottomRight());
-//    }
-//        break;
-//    case TopCenter:
-//    {
-//        QPoint beginPoint = QPoint(currentRect.topLeft().x(), m_endMovePoint.y());
-//        stretchRect = getRect(beginPoint, currentRect.bottomRight());
-//    }
-//        break;
-//    case RightCenter:
-//    {
-//        QPoint endPoint = QPoint(m_endMovePoint.x(), currentRect.bottomRight().y());
-//        stretchRect = getRect(currentRect.topLeft(), endPoint);
-//    }
-//        break;
-//    case BottomCenter:
-//    {
-//        QPoint endPoint = QPoint(currentRect.bottomRight().x(), m_endMovePoint.y());
-//        stretchRect = getRect(currentRect.topLeft(), endPoint);
-//    }
-//        break;
-//    default:
-//    {
-//        stretchRect = getRect(m_beginPoint , m_endPoint );
-//    }
-//        break;
-//    }
+    //    QRectF currentRect = getRect(m_beginPoint, m_endPoint);
+    //    switch (m_stretchRectState)
+    //    {
+    //    case None:
+    //        stretchRect = getRect(m_beginPoint, m_endPoint);
+    //        break;
+    //    case TopLeft:
+    //    {
+    //        stretchRect = getRect(currentRect.bottomRight(), m_endMovePoint);
+    //    }
+    //        break;
+    //    case TopRight:
+    //    {
+    //        QPoint beginPoint = QPoint(currentRect.topLeft().x(), m_endMovePoint.y());
+    //        QPoint endPoint = QPoint(m_endMovePoint.x(), currentRect.bottomRight().y());
+    //        stretchRect = getRect(beginPoint, endPoint);
+    //    }
+    //        break;
+    //    case BottomLeft:
+    //    {
+    //        QPoint beginPoint = QPoint(m_endMovePoint.x() , currentRect.topLeft().y());
+    //        QPoint endPoint = QPoint(currentRect.bottomRight().x(), m_endMovePoint.y());
+    //        stretchRect = getRect(beginPoint, endPoint);
+    //    }
+    //        break;
+    //    case BottomRight:
+    //    {
+    //        stretchRect = getRect(currentRect.topLeft(), m_endMovePoint);
+    //    }
+    //        break;
+    //    case LeftCenter:
+    //    {
+    //        QPoint beginPoint = QPoint(m_endMovePoint.x(), currentRect.topLeft().y());
+    //        stretchRect = getRect(beginPoint, currentRect.bottomRight());
+    //    }
+    //        break;
+    //    case TopCenter:
+    //    {
+    //        QPoint beginPoint = QPoint(currentRect.topLeft().x(), m_endMovePoint.y());
+    //        stretchRect = getRect(beginPoint, currentRect.bottomRight());
+    //    }
+    //        break;
+    //    case RightCenter:
+    //    {
+    //        QPoint endPoint = QPoint(m_endMovePoint.x(), currentRect.bottomRight().y());
+    //        stretchRect = getRect(currentRect.topLeft(), endPoint);
+    //    }
+    //        break;
+    //    case BottomCenter:
+    //    {
+    //        QPoint endPoint = QPoint(currentRect.bottomRight().x(), m_endMovePoint.y());
+    //        stretchRect = getRect(currentRect.topLeft(), endPoint);
+    //    }
+    //        break;
+    //    default:
+    //    {
+    //        stretchRect = getRect(m_beginPoint , m_endPoint );
+    //    }
+    //        break;
+    //    }
 
-//    // 拖动结束更新 m_beginPoint , m_endPoint;
-//    if (m_currentCaptureState == FinishMoveStretchRect)
-//    {
-//        m_beginPoint = stretchRect.topLeft();
-//        m_endPoint = stretchRect.bottomRight();
-//    }
+    //    // 拖动结束更新 m_beginPoint , m_endPoint;
+    //    if (m_currentCaptureState == FinishMoveStretchRect)
+    //    {
+    //        m_beginPoint = stretchRect.topLeft();
+    //        m_endPoint = stretchRect.bottomRight();
+    //    }
 
     return stretchRect;
 }
@@ -930,4 +952,14 @@ void BoxItem::mouseMoveEvent(QGraphicsSceneDragDropEvent *event)
 void BoxItem::mousePressEvent(QGraphicsSceneDragDropEvent *event)
 {
     event->setAccepted(false);
+}
+void BoxItem::setScale(QRectF fatherRect, qreal factor)
+{
+    qreal dx = fatherRect.width()/_fatherRect.width();
+    qreal dy = fatherRect.height()/_fatherRect.height();
+
+    qreal x = fatherRect.left() + (_box.left() - _fatherRect.left())*dx;
+    qreal y = fatherRect.top() + (_box.top() - _fatherRect.top())*dy;
+    this->_fatherRect = fatherRect;
+    this->setRect(x, y, _box.width()*dx, _box.height()*dy);
 }

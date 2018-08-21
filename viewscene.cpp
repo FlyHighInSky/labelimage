@@ -1,10 +1,10 @@
 #include "viewscene.h"
+#include <QtDebug>
 
 ViewScene::ViewScene(QObject* parent):
     QGraphicsScene(parent),
     history(5)
 {
-    itemToDraw = 0;
     boxToDraw = 0;
     isDrawing = false;
 }
@@ -16,13 +16,39 @@ void ViewScene::loadImage(QString path)
 }
 void ViewScene::drawView()
 {
-//    this->clear();
+//    QList<BoxItem> *itemsList = new QList<BoxItem>();
+//    foreach (QGraphicsItem *item, this->items()) {
+//        if (item->type() == QGraphicsItem::UserType+1) {
+//                itemsList->append(*(qgraphicsitem_cast<BoxItem *>(item)));
+//        }
+//    }
 
+//            (this->items());
+//    this->clear();
     // Actual image layer.
     auto pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*history.current()));
     pixmapItem->setAcceptHoverEvents(true);
     pixmapItem->setScale(previewZoom);
     pixmapItem->setTransformationMode(Qt::SmoothTransformation);
+
+      addItem(pixmapItem);
+      // Reset scene size to make scrollbars disappear.
+      QPoint zero(0, 0);
+      QRect rect(zero, history.current()->size() * previewZoom);
+      setSceneRect(rect);
+
+    foreach (QGraphicsItem *item, this->items()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
+            this->removeItem(b);
+            b->setScale(this->sceneRect(), previewZoom);
+            this->addItem(b);
+        } else if (item->type() == QGraphicsPixmapItem::Type) {
+            removeItem(item);
+            addItem(pixmapItem);
+        }
+    }
+
 
     // Layer with decorative half-transparent border.
 //	auto pixmapSize = image->pixmap().size();
@@ -31,7 +57,6 @@ void ViewScene::drawView()
 //	border->setPen(QPen(QColor(0, 0, 0, 64), 1, Qt::SolidLine, Qt::SquareCap, Qt::RoundJoin));
 
     // Adds layers to scene.
-      addItem(pixmapItem);
 //        addItem(border);
 
     // Reset scene size to make scrollbars disappear.
@@ -40,36 +65,52 @@ void ViewScene::drawView()
 //        viewScene->setSceneRect(rect);
 //      views().first()->viewport();
 
-      // Reset scene size to make scrollbars disappear.
-      QPoint zero(0, 0);
-      QRect rect(zero, history.current()->size() * previewZoom);
-      setSceneRect(rect);
+}
+
+void ViewScene::deleteBoxItems()
+{
+    foreach (QGraphicsItem *item, this->selectedItems()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            this->removeItem(item);
+            delete item;
+        }
+    }
+}
+
+void ViewScene::selectAllBoxItems()
+{
+    // unselecting box items
+    foreach (QGraphicsItem *item, this->items()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            item->setSelected(true);
+        }
+    }
+}
+void ViewScene::deselectAllBoxItems()
+{
+    // unselecting box items
+    foreach (QGraphicsItem *item, this->selectedItems()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            item->setSelected(false);
+        }
+    }
 }
 
 void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    QGraphicsScene::mousePressEvent(event);
+
     if (event->button() == Qt::LeftButton) {
-            if (event->modifiers() == Qt::ShiftModifier) {
+            if (event->modifiers() == Qt::ShiftModifier) { // drawing box item
+                deselectAllBoxItems();
                 leftTopPoint = event->scenePos();
                 isDrawing = true;
-            } else {
-                ;
+            } else if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
+                QGraphicsScene::mousePressEvent(event);
+            } else { // selecting single box item
+                deselectAllBoxItems();
+                QGraphicsScene::mousePressEvent(event);
             }
     }
-
-//    // check items under curse
-//    QGraphicsItem *selectedIteme = NULL;
-//    foreach (QGraphicsItem *item, items(event->scenePos())) {
-//        if (item->type() == QGraphicsItem::UserType+1) {
-//            selectedIteme = item;
-//            break;
-//        }
-//    }
-//    // 从 Scene 上移除 item
-//    if (selectedIteme != NULL)
-//        removeItem(selectedIteme);
-
 }
 
 void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -104,6 +145,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if(!boxToDraw) {
             boxToDraw = new BoxItem(this->sceneRect());
             addItem(boxToDraw);
+            boxToDraw->setSelected(true);
         }
         rightBottomPoint = event->scenePos();
         QRect roi(qMin(rightBottomPoint.x(), leftTopPoint.x()),
@@ -129,20 +171,20 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void ViewScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    itemToDraw = 0;
     isDrawing = false;
+    boxToDraw = 0;
     QGraphicsScene::mouseReleaseEvent(event);
 }
 
 void ViewScene::keyPressEvent(QKeyEvent *event)
 {
-    if(event->key() == Qt::Key_Delete)
-        foreach(QGraphicsItem* item, selectedItems()){
-            removeItem(item);
-            delete item;
-        }
-    else
+    if(event->key() == Qt::Key_Delete) {
+        deleteBoxItems();
+    } else if(event->key() == Qt::Key_A && event->modifiers() == Qt::ControlModifier) {
+        selectAllBoxItems();
+    } else {
         QGraphicsScene::keyPressEvent(event);
+    }
 }
 
 /**

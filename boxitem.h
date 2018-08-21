@@ -17,6 +17,8 @@
 #include <QPen>
 #include <QPointF>
 #include <QCursor>
+#include <QStyle>
+#include <QStyleOptionGraphicsItem>
 #include "cornergrabber.h"
 
 
@@ -30,7 +32,7 @@ enum GrabberID{
     BottomCenter,
     BottomLeft,
     LeftCenter,
-    None
+    BoxRegion
 };
 
 enum TaskStatus {
@@ -60,15 +62,23 @@ public:
     BoxItem(QRectF fatherRect);
     QGraphicsTextItem _text;    ///< sample text to go in the title area.
 
+    void setScale(QRectF fatherRect, qreal factor);
     void setRect(const QRectF &rect);
     void setRect(const qreal x, qreal y, qreal w, qreal h);
+    enum { Type = UserType + 1 };
+    int type() const
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    }
 
 private:
 
     virtual QRectF boundingRect() const; ///< must be re-implemented in this class to provide the diminsions of the box to the QGraphicsView
-    virtual void paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget); ///< must be re-implemented here to pain the box on the paint-event
-//    virtual void hoverEnterEvent ( QGraphicsSceneHoverEvent * event ); ///< must be re-implemented to handle mouse hover enter events
-//    virtual void hoverLeaveEvent ( QGraphicsSceneHoverEvent * event ); ///< must be re-implemented to handle mouse hover leave events
+    void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void hoverEnterEvent ( QGraphicsSceneHoverEvent *event ); ///< must be re-implemented to handle mouse hover enter events
+    virtual void hoverLeaveEvent ( QGraphicsSceneHoverEvent *event ); ///< must be re-implemented to handle mouse hover leave events
+    virtual void hoverMoveEvent (QGraphicsSceneHoverEvent * event);
 
     virtual void mouseMoveEvent ( QGraphicsSceneMouseEvent * event );///< allows the main object to be moved in the scene by capturing the mouse move events
     virtual void mousePressEvent (QGraphicsSceneMouseEvent * event );
@@ -87,7 +97,7 @@ private:
     QRectF getStretchRect();
     void setGrabberCursor(GrabberID stretchRectState);
     GrabberID _selectedGrabber;
-    TaskStatus _taskStatus;
+    TaskStatus _taskStatus = Waiting;
 
     QRectF _fatherRect;
     QRectF _box;
@@ -99,12 +109,9 @@ private:
     QRectF _oldBox;
     QPointF _dragStart, _dragEnd;
 
-    QPointF _cornerDragStart;
-
     int _grabberWidth;
     int _grabberHeight;
 
-    CornerGrabber*  _corners[8];// 0,1,2,3  - starting at x=0,y=0 and moving clockwise around the box
     QRectF _grabbers[8];
 
 };

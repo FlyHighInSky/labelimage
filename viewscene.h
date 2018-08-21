@@ -33,6 +33,9 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
+    void deleteBoxItems();
+    void deselectAllBoxItems();
+    void selectAllBoxItems();
 private:
     QImage *image = nullptr;
     QGraphicsPixmapItem *pixmapItem;
@@ -40,7 +43,6 @@ private:
     double previewZoom = 1;
     QPointF leftTopPoint;
     QPointF rightBottomPoint;
-    QGraphicsRectItem* itemToDraw;
     bool isDrawing;
     UndoHistory<QImage*> history;
 
