@@ -99,7 +99,6 @@ private:
     void createMenus();
     void updateActions();
     void scaleImage(double factor);
-    void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
     QWidget *centralWidget;
     QAction *fitToWindowAct;

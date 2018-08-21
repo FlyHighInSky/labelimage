@@ -7,8 +7,9 @@
 #include <QAction>
 #include <QGraphicsView>
 #include <QKeyEvent>
-#include "undohistory.h"
 #include "boxitem.h"
+#include <QFileInfo>
+#include <QFile>
 
 class ViewScene : public QGraphicsScene
 {
@@ -16,14 +17,13 @@ public:
     ViewScene(QObject* parent = 0);
 
     void loadImage(QString path);
-    void setMaxViewSize(int w, int h);
     double viewZoom() const;
+    void setViewZoom(int w, int h);
     void setViewZoom(double zoom);
     void saveToFile(const QString& path);
+    void clear();
 
-    void resize(double zoom);
-    void resize(int w, int h);
-
+    QImage *image = nullptr;
     void Undo();
     void Redo();
 
@@ -34,17 +34,17 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void deleteBoxItems();
-    void deselectAllBoxItems();
-    void selectAllBoxItems();
+    void selectAllBoxItems(bool op);
 private:
-    QImage *image = nullptr;
-    QGraphicsPixmapItem *pixmapItem;
-    BoxItem* boxToDraw;
-    double previewZoom = 1;
+    QGraphicsPixmapItem *pixmapItem = nullptr;
+    BoxItem* boxItem = nullptr;
+    double zoomFactor = 1;
     QPointF leftTopPoint;
     QPointF rightBottomPoint;
-    bool isDrawing;
-    UndoHistory<QImage*> history;
-
+    bool isDrawing = false;
+    QString _labelFilePath;
+    void loadBoxItemsFromFile();
+    void saveBoxItemsToFile();
+    bool _isLabelFileLoaded = false;
 };
 #endif // VIEWSCENE_H

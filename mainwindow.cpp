@@ -1,52 +1,3 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
 
 #include <QScrollBar>
 #include <QImageWriter>
@@ -66,22 +17,8 @@
 
 #include "mainwindow.h"
 
-//! [0]
 MainWindow::MainWindow()
-//   : imageLabel(new QLabel)
-//   : scrollArea(new QScrollArea)
-//   , scaleFactor(1)
 {
-//    imageLabel = new ImageLabelWidget();
-//    imageLabel->setBackgroundRole(QPalette::Base);
-//    imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-//    imageLabel->setScaledContents(true);
-
-//    scrollArea->setBackgroundRole(QPalette::Dark);
-//    scrollArea->setWidget(imageLabel);
-//    scrollArea->setVisible(false);
-//    setCentralWidget(scrollArea);
-
     createActions();
     createCentralWindow();
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
@@ -171,9 +108,7 @@ void MainWindow::paste()
 #endif // !QT_NO_CLIPBOARD
 }
 
-//! [15]
 void MainWindow::about()
-//! [15] //! [16]
 {
     QMessageBox::about(this, tr("About Image Viewer"),
             tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
@@ -189,7 +124,6 @@ void MainWindow::about()
                "zooming and scaling features. </p><p>In addition the example "
                "shows how to use QPainter to print an image.</p>"));
 }
-//! [16]
 
 /**
  * @brief MainWindow::createActions add menu actions
@@ -367,21 +301,13 @@ void MainWindow::updateActions()
     zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
 }
 
-void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor)
-{
-    scrollBar->setValue(int(factor * scrollBar->value()
-                            + ((factor - 1) * scrollBar->pageStep()/2)));
-}
-
-
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    try {
-        auto index = selected.indexes().first();
-        scene->loadImage(fileListModel->filePath(index));
-    } catch (int code) {
-        return;
+    if (scene->image != nullptr) {
+        scene->clear();
     }
+    auto index = selected.indexes().first();
+    scene->loadImage(fileListModel->filePath(index));
 
     imageView->setScene(scene);
     isImageLoaded = true;
@@ -401,7 +327,7 @@ void MainWindow::zoomIn()
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
 
-    scene->setViewZoom(scene->viewZoom() * 2);
+    scene->setViewZoom(scene->viewZoom() * 1.2);
 }
 
 void MainWindow::zoomOut()
@@ -412,7 +338,7 @@ void MainWindow::zoomOut()
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
 
-    scene->setViewZoom(scene->viewZoom() * 0.5);
+    scene->setViewZoom(scene->viewZoom() * 0.8);
 }
 
 void MainWindow::wheelEvent(QWheelEvent *event)
@@ -448,9 +374,7 @@ void MainWindow::fitViewToWindow()
     if (!fitToWindowAct->isChecked())
         return;
 
-    scene->setMaxViewSize(
-                imageView->width() - 2 - 15,
-                imageView->height() - 2 - 15 );
+    scene->setViewZoom(imageView->width() - 2, imageView->height() - 2);
 }
 
 void MainWindow::fitViewToActual()
