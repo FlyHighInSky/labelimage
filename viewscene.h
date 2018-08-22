@@ -24,6 +24,7 @@ public:
     void clear();
 
     QImage *image = nullptr;
+    QList<QString> *classNameList = nullptr;
     void Undo();
     void Redo();
 

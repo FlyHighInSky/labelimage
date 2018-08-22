@@ -60,8 +60,7 @@ void ViewScene::loadBoxItemsFromFile()
             x = info.at(1).toFloat() * image->width() - w/2;
             y = info.at(2).toFloat() * image->height() - h/2;
 
-            BoxItem *b = new BoxItem(fatherRect);
-            b->setLabelClass(cls);
+            BoxItem *b = new BoxItem(fatherRect, image->size(), classNameList, classNameList->at(cls));
             b->setLabelRect(x,y,w,h);
             b->setRect(x,y,w,h);
 
@@ -84,7 +83,8 @@ void ViewScene::saveBoxItemsToFile()
             b->labelRect(label);
             QString s;
             s.sprintf("%d %f %f %f %f\n",
-                      b->labelClass(),label[0],label[1],label[2],label[3]);
+                      classNameList->indexOf(b->labelClassName()),
+                      label[0],label[1],label[2],label[3]);
             out << s;
         }
     }
@@ -134,7 +134,8 @@ void ViewScene::selectAllBoxItems(bool op)
 
 void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton) {
+    switch (event->button()) {
+    case Qt::LeftButton:
         if (event->modifiers() == Qt::ShiftModifier) { // drawing box item
             selectAllBoxItems(false); // deselect all the other box items
 //            this->views().at(0)->setCursor(Qt::CrossCursor);
@@ -146,6 +147,13 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
             selectAllBoxItems(false);
             QGraphicsScene::mousePressEvent(event);
         }
+        break;
+    case Qt::RightButton:
+        selectAllBoxItems(false);
+        QGraphicsScene::mousePressEvent(event);
+    break;
+    default:
+        break;
     }
 }
 
@@ -156,7 +164,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 //    }
     if(isDrawing) {
         if(!boxItem) {
-            boxItem = new BoxItem(this->sceneRect());
+            boxItem = new BoxItem(this->sceneRect(), image->size(), classNameList, classNameList->at(0));
             this->addItem(boxItem);
             boxItem->setSelected(true);
         }

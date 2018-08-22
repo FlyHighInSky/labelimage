@@ -3,20 +3,30 @@
 #include <QLinearGradient>
 #include <QDebug>
 
-BoxItem::BoxItem(QRectF fatherRect):
-    _text(),
+BoxItem::BoxItem(QRectF fatherRect, QSize imageSize, QList<QString> *classNameList, QString labelClassName):
+    _classNameList(classNameList),
+    _textRect(),
+    _textName(),
+    _labelClassName(labelClassName),
     _color(Qt::red),
     _pen(),
     _dragStart(0,0),
     _fatherRect(fatherRect),
     _grabberWidth(20),
     _grabberHeight(20),
-    _drawingRegion()
+    _drawingRegion(),
+    _imageWidth(imageSize.width()),
+    _imageHeight(imageSize.height())
 {
+    _textRect.setDefaultTextColor(QColor(255,255,255,255));
+    _textRect.setParentItem(this);
+    _textName.setDefaultTextColor(QColor(255,255,255,255));
+    _textName.setParentItem(this);
     _pen.setWidth(2);
     _pen.setColor(_color);
     this->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable);
     this->setAcceptHoverEvents(true);
+    initContextMenu();
 }
 
 void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
@@ -51,6 +61,9 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
             _taskStatus = Moving;
         }
         this->setSelected(!this->isSelected());
+        break;
+    case Qt::RightButton:
+        this->setSelected(true);
         break;
     default:
         break;
@@ -203,9 +216,9 @@ void BoxItem::setRect(const QRectF &rect)
 
     this->update();
 }
-void BoxItem::setLabelClass(int cls)
+void BoxItem::setLabelClassName(QString name)
 {
-    _labelClass = cls;
+    _labelClassName = name;
 }
 
 void BoxItem::setLabelRect(QRectF rect)
@@ -222,7 +235,6 @@ QRectF BoxItem::boundingRect() const
 {
     return _boundingRect;
 }
-
 void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     _pen.setStyle(Qt::SolidLine);
@@ -239,6 +251,17 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
         }
     }
     painter->drawRect(_box);
+
+    _textRect.setPos(_box.topLeft());
+    qreal _xScale = _imageWidth*1.0/_fatherRect.width();
+    qreal _yScale = _imageHeight*1.0/_fatherRect.height();
+    QString rectInfo = QString("[%1,%2,%3,%4]")
+            .arg((int)(_box.left()*_xScale)).arg((int)(_box.top()*_yScale))
+            .arg((int)(_box.width()*_xScale)).arg((int)(_box.height()*_yScale));
+    _textRect.setPlainText(rectInfo);
+
+    _textName.setPos(_box.bottomLeft());
+    _textName.setPlainText(_labelClassName);
 }
 
 GrabberID BoxItem::getSelectedGrabber(QPointF point)
@@ -361,4 +384,19 @@ void BoxItem::setScale(QRectF fatherRect)
     qreal y = fatherRect.top() + (_box.top() - _fatherRect.top())*dy;
     this->_fatherRect = fatherRect;
     this->setRect(x, y, _box.width()*dx, _box.height()*dy);
+}
+void BoxItem::initContextMenu()
+{
+    _contextMenu.clear();
+    foreach (QString name, *_classNameList) {
+        _contextMenu.addAction(name);
+    }
+}
+void BoxItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    QAction *selectedAction = _contextMenu.exec(event->screenPos());
+    QString name = selectedAction->text();
+    if (_classNameList->contains(name)) {
+        setLabelClassName(name);
+    }
 }

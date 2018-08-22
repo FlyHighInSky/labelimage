@@ -23,30 +23,6 @@ MainWindow::MainWindow()
     createCentralWindow();
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
 }
-
-
-static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode)
-{
-    static bool firstDialog = true;
-
-    if (firstDialog) {
-        firstDialog = false;
-        const QStringList picturesLocations = QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
-        dialog.setDirectory(picturesLocations.isEmpty() ? QDir::currentPath() : picturesLocations.last());
-    }
-
-    QStringList mimeTypeFilters;
-    const QByteArrayList supportedMimeTypes = acceptMode == QFileDialog::AcceptOpen
-        ? QImageReader::supportedMimeTypes() : QImageWriter::supportedMimeTypes();
-    foreach (const QByteArray &mimeTypeName, supportedMimeTypes)
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-    dialog.selectMimeTypeFilter("image/jpeg");
-    if (acceptMode == QFileDialog::AcceptSave)
-        dialog.setDefaultSuffix("jpg");
-}
-
 /**
  * @brief MainWindow::openDirectory
  *        Open the specified directory that contains images to be labeled.
@@ -54,9 +30,9 @@ static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMo
 void MainWindow::openFolder()
 {
     QString srcImageDir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                             "",
-                                             QFileDialog::ShowDirsOnly
-                                             | QFileDialog::DontResolveSymlinks);
+                                                            "",
+                                                            QFileDialog::ShowDirsOnly
+                                                            | QFileDialog::DontResolveSymlinks);
     if (!srcImageDir.isEmpty()) {
         fileListModel->setFilter(QDir::Files | QDir::NoDotAndDotDot);
         fileListModel->setNameFilters(filters);
@@ -67,9 +43,37 @@ void MainWindow::openFolder()
         fileListView->setModel(fileListModel);
         fileListView->setRootIndex(fileListModel->index(srcImageDir));
 
-    connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
-            this, &MainWindow::onFileSelected);
+//        fileListView->setSelectionBehavior(QAbstractItemView::SelectRows);
+//        fileListView->setCurrentIndex(fileListModel->index(0,0, fileListView->rootIndex()));
+//        QItemSelectionModel s;
+//        s.setCurrentIndex();
+//        QModelIndex idx = fileListModel->index(srcImageDir);
+//        QModelIndex m = fileListModel->index(0,0,fileListModel->index(srcImageDir));
+//        s.setCurrentIndex(m, );
+//        fileListView->selectionModel()->setCurrentIndex(m, QItemSelectionModel::Rows | QItemSelectionModel::Select);
+
+        connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
+                this, &MainWindow::onFileSelected);
+        loadClassNames(srcImageDir+"/names.txt");
+        _viewScene->classNameList = _classNames;
+
     }
+}
+void MainWindow::loadClassNames(QString filePath)
+{
+    QFile file(filePath);
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+
+    _classNames = new QList<QString>();
+
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString s = in.readLine();
+        if(!(s.simplified().isEmpty())) {
+            _classNames->append(s);
+        }
+    }
+    file.close();
 }
 void MainWindow::copy()
 {
@@ -99,10 +103,10 @@ void MainWindow::paste()
     if (newImage.isNull()) {
         statusBar()->showMessage(tr("No image in clipboard"));
     } else {
-//        setImage(newImage);
+        //        setImage(newImage);
         setWindowFilePath(QString());
         const QString message = tr("Obtained image from clipboard, %1x%2, Depth: %3")
-            .arg(newImage.width()).arg(newImage.height()).arg(newImage.depth());
+                .arg(newImage.width()).arg(newImage.height()).arg(newImage.depth());
         statusBar()->showMessage(message);
     }
 #endif // !QT_NO_CLIPBOARD
@@ -111,18 +115,18 @@ void MainWindow::paste()
 void MainWindow::about()
 {
     QMessageBox::about(this, tr("About Image Viewer"),
-            tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
-               "and QScrollArea to display an image. QLabel is typically used "
-               "for displaying a text, but it can also display an image. "
-               "QScrollArea provides a scrolling view around another widget. "
-               "If the child widget exceeds the size of the frame, QScrollArea "
-               "automatically provides scroll bars. </p><p>The example "
-               "demonstrates how QLabel's ability to scale its contents "
-               "(QLabel::scaledContents), and QScrollArea's ability to "
-               "automatically resize its contents "
-               "(QScrollArea::widgetResizable), can be used to implement "
-               "zooming and scaling features. </p><p>In addition the example "
-               "shows how to use QPainter to print an image.</p>"));
+                       tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
+                          "and QScrollArea to display an image. QLabel is typically used "
+                          "for displaying a text, but it can also display an image. "
+                          "QScrollArea provides a scrolling view around another widget. "
+                          "If the child widget exceeds the size of the frame, QScrollArea "
+                          "automatically provides scroll bars. </p><p>The example "
+                          "demonstrates how QLabel's ability to scale its contents "
+                          "(QLabel::scaledContents), and QScrollArea's ability to "
+                          "automatically resize its contents "
+                          "(QScrollArea::widgetResizable), can be used to implement "
+                          "zooming and scaling features. </p><p>In addition the example "
+                          "shows how to use QPainter to print an image.</p>"));
 }
 
 /**
@@ -232,41 +236,41 @@ void MainWindow::createActions()
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     QToolBar *helpToolBar = addToolBar(tr("Help"));
 
-//    // 语言
-//    QMenu *languageMenu = helpMenu->addMenu(
-//                QIcon::fromTheme("document-open", QIcon(":/images/language.png")), tr("&Language"));
-//    languageMenu->setStatusTip(tr("Select language"));
+    //    // 语言
+    //    QMenu *languageMenu = helpMenu->addMenu(
+    //                QIcon::fromTheme("document-open", QIcon(":/images/language.png")), tr("&Language"));
+    //    languageMenu->setStatusTip(tr("Select language"));
 
-//    // 中文
-//    QAction *zhCNAct = languageMenu->addAction(
-//                QIcon::fromTheme("document-open", QIcon(":/images/zh_CN.png")),
-//                tr("&Chinese"));
-//    languageMenu->addAction(zhCNAct);
-//    helpToolBar->addAction(zhCNAct);
-//    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+    //    // 中文
+    //    QAction *zhCNAct = languageMenu->addAction(
+    //                QIcon::fromTheme("document-open", QIcon(":/images/zh_CN.png")),
+    //                tr("&Chinese"));
+    //    languageMenu->addAction(zhCNAct);
+    //    helpToolBar->addAction(zhCNAct);
+    //    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
-//    // 英文
-//    QAction *enUSAct = languageMenu->addAction(
-//                QIcon::fromTheme("document-open", QIcon(":/images/en_US.png")),
-//                tr("&English"));
-//    languageMenu->addAction(enUSAct);
-//    helpToolBar->addAction(enUSAct);
-//    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+    //    // 英文
+    //    QAction *enUSAct = languageMenu->addAction(
+    //                QIcon::fromTheme("document-open", QIcon(":/images/en_US.png")),
+    //                tr("&English"));
+    //    languageMenu->addAction(enUSAct);
+    //    helpToolBar->addAction(enUSAct);
+    //    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
-//    // 帮助按钮
-//    QAction *helpAct = helpMenu->addAction(
-//                QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
-//                tr("&Help"), this, &MainWindow::about);
-//    helpAct->setStatusTip(tr("Show the application's About box"));
-//    helpAct->setShortcut(QKeySequence::HelpContents);
-//    helpToolBar->addAction(helpAct);
+    //    // 帮助按钮
+    //    QAction *helpAct = helpMenu->addAction(
+    //                QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
+    //                tr("&Help"), this, &MainWindow::about);
+    //    helpAct->setStatusTip(tr("Show the application's About box"));
+    //    helpAct->setShortcut(QKeySequence::HelpContents);
+    //    helpToolBar->addAction(helpAct);
 
-//    // 关于按钮
-//    QAction *aboutAct = helpMenu->addAction(
-//                QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
-//                tr("&About"), qApp, &QApplication::aboutQt);
-//    aboutAct->setStatusTip(tr("Show the Qt library's About box"));
-//    helpToolBar->addAction(aboutAct);
+    //    // 关于按钮
+    //    QAction *aboutAct = helpMenu->addAction(
+    //                QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
+    //                tr("&About"), qApp, &QApplication::aboutQt);
+    //    aboutAct->setStatusTip(tr("Show the Qt library's About box"));
+    //    helpToolBar->addAction(aboutAct);
 }
 
 void MainWindow::createCentralWindow()
@@ -276,7 +280,7 @@ void MainWindow::createCentralWindow()
     fileListView = new QTreeView(this);
     imageView = new QGraphicsView(this);
     imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    scene = new ViewScene(this);
+    _viewScene = new ViewScene(this);
 
     fileListModel = new QFileSystemModel(this);
     filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
@@ -293,7 +297,12 @@ void MainWindow::createCentralWindow()
     this->setCentralWidget(centralWidget);
 
 }
-
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (_viewScene != nullptr) {
+        _viewScene->clear();
+    }
+}
 void MainWindow::updateActions()
 {
     copyAct->setEnabled(!image.isNull());
@@ -303,13 +312,13 @@ void MainWindow::updateActions()
 
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    if (scene->image != nullptr) {
-        scene->clear();
+    if (_viewScene->image != nullptr) {
+        _viewScene->clear();
     }
     auto index = selected.indexes().first();
-    scene->loadImage(fileListModel->filePath(index));
+    _viewScene->loadImage(fileListModel->filePath(index));
 
-    imageView->setScene(scene);
+    imageView->setScene(_viewScene);
     isImageLoaded = true;
     fitViewToWindow();
 }
@@ -318,7 +327,14 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 {
     fitViewToWindow();
 }
-
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::LeftArrow) {
+        ;
+    } else if (event->key() == Qt::RightArrow) {
+        ;
+    }
+}
 void MainWindow::zoomIn()
 {
     if (!isImageLoaded)
@@ -327,7 +343,7 @@ void MainWindow::zoomIn()
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
 
-    scene->setViewZoom(scene->viewZoom() * 1.2);
+    _viewScene->setViewZoom(_viewScene->viewZoom() * 1.2);
 }
 
 void MainWindow::zoomOut()
@@ -338,7 +354,7 @@ void MainWindow::zoomOut()
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
 
-    scene->setViewZoom(scene->viewZoom() * 0.8);
+    _viewScene->setViewZoom(_viewScene->viewZoom() * 0.8);
 }
 
 void MainWindow::wheelEvent(QWheelEvent *event)
@@ -349,22 +365,22 @@ void MainWindow::wheelEvent(QWheelEvent *event)
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
 
-//    int numDegrees = event->delta() / 8;
-//    int numSteps = numDegrees / 15; // see QWheelEvent documentation
-//    _numScheduledScalings += numSteps;
-//    if (_numScheduledScalings * numSteps < 0) // if user moved the wheel in another direction, we reset previously scheduled scalings
-//    _numScheduledScalings = numSteps;
+    //    int numDegrees = event->delta() / 8;
+    //    int numSteps = numDegrees / 15; // see QWheelEvent documentation
+    //    _numScheduledScalings += numSteps;
+    //    if (_numScheduledScalings * numSteps < 0) // if user moved the wheel in another direction, we reset previously scheduled scalings
+    //    _numScheduledScalings = numSteps;
 
-//    QTimeLine *anim = new QTimeLine(350, this);
-//    anim->setUpdateInterval(20);
+    //    QTimeLine *anim = new QTimeLine(350, this);
+    //    anim->setUpdateInterval(20);
 
-//    connect(anim, SIGNAL (valueChanged(qreal)), SLOT (scalingTime(qreal)));
-//    connect(anim, SIGNAL (finished()), SLOT (animFinished()));
-//    anim->start();
+    //    connect(anim, SIGNAL (valueChanged(qreal)), SLOT (scalingTime(qreal)));
+    //    connect(anim, SIGNAL (finished()), SLOT (animFinished()));
+    //    anim->start();
 
-    auto oldZoom = scene->viewZoom();
+    auto oldZoom = _viewScene->viewZoom();
     auto newZoom = oldZoom + (event->delta() / 120.0) * 0.05;
-    scene->setViewZoom(newZoom <= 0 ? oldZoom : newZoom);
+    _viewScene->setViewZoom(newZoom <= 0 ? oldZoom : newZoom);
 }
 
 void MainWindow::fitViewToWindow()
@@ -374,7 +390,7 @@ void MainWindow::fitViewToWindow()
     if (!fitToWindowAct->isChecked())
         return;
 
-    scene->setViewZoom(imageView->width() - 2, imageView->height() - 2);
+    _viewScene->setViewZoom(imageView->width() - 2, imageView->height() - 2);
 }
 
 void MainWindow::fitViewToActual()
@@ -385,7 +401,7 @@ void MainWindow::fitViewToActual()
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
 
-    scene->setViewZoom(1);
+    _viewScene->setViewZoom(1);
 }
 
 void MainWindow::fullScreen()

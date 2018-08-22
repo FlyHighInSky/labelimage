@@ -99,7 +99,10 @@ private:
     void createMenus();
     void updateActions();
     void scaleImage(double factor);
+    void closeEvent(QCloseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
+    void loadClassNames(QString filePath);
     QWidget *centralWidget;
     QAction *fitToWindowAct;
     QImage image;
@@ -107,9 +110,10 @@ private:
     QSplitter *mainSplitter;
     QTreeView *fileListView;
     QGraphicsView *imageView;
-    ViewScene *scene = nullptr;
+    ViewScene *_viewScene = nullptr;
     QFileSystemModel *fileListModel;
     QStringList filters;
+    QList<QString> *_classNames = nullptr;
     bool isImageLoaded =  false;
     QScrollArea *scrollArea;
     double scaleFactor;

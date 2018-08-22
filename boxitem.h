@@ -14,6 +14,7 @@
 #include <QStyle>
 #include <QStyleOptionGraphicsItem>
 #include "cornergrabber.h"
+#include <QMenu>
 
 enum GrabberID{
     TopLeft = 0,
@@ -36,16 +37,15 @@ enum TaskStatus {
 class BoxItem : public QGraphicsItem
 {
 public:
-    BoxItem(QRectF fatherRect);
-    QGraphicsTextItem _text;
+    BoxItem(QRectF fatherRect, QSize imageSize, QList<QString> *classNameList, QString labelClassName);
 
     void setScale(QRectF fatherRect);
     void setRect(const QRectF &rect);
     void setRect(const qreal x, qreal y, qreal w, qreal h);
-    void setLabelClass(int cls);
-    int labelClass() const
+    void setLabelClassName(QString name);
+    QString labelClassName() const
     {
-        return _labelClass;
+        return _labelClassName;
     }
     void setLabelRect(QRectF rect);
     void labelRect(qreal *info) const
@@ -78,6 +78,7 @@ private:
     virtual void mouseMoveEvent ( QGraphicsSceneMouseEvent * event );
     virtual void mousePressEvent (QGraphicsSceneMouseEvent * event );
     virtual void mouseReleaseEvent (QGraphicsSceneMouseEvent * event );
+    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 
     virtual void mouseMoveEvent(QGraphicsSceneDragDropEvent *event);
     virtual void mousePressEvent(QGraphicsSceneDragDropEvent *event);
@@ -86,18 +87,23 @@ private:
     void moveBox(QPointF pos);
     void stretchBox(QPointF pos);
 
+    void initContextMenu();
     GrabberID getSelectedGrabber(QPointF point);
     void setGrabberCursor(GrabberID stretchRectState);
     GrabberID _selectedGrabber;
     TaskStatus _taskStatus = Waiting;
 
+    int _imageWidth, _imageHeight;
     QRectF _fatherRect;
     QRectF _box;
+    QGraphicsTextItem _textRect, _textName;
     QRectF _drawingRegion;
     QRectF _boundingRect;
-    int _labelClass = 0;
+    QString _labelClassName;
+    QList<QString> *_classNameList;
     QRectF _labelRect;
 
+    QMenu _contextMenu;
     QColor _color;
     QPen _pen;
     QRectF _oldBox;
