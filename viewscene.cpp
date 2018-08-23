@@ -1,5 +1,6 @@
 #include "viewscene.h"
 #include <QtDebug>
+#include <QScrollBar>
 
 ViewScene::ViewScene(QObject* parent):
     QGraphicsScene(parent),
@@ -134,11 +135,10 @@ void ViewScene::selectAllBoxItems(bool op)
 
 void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    switch (event->button()) {
+    switch (event->buttons()) {
     case Qt::LeftButton:
         if (event->modifiers() == Qt::ShiftModifier) { // drawing box item
             selectAllBoxItems(false); // deselect all the other box items
-//            this->views().at(0)->setCursor(Qt::CrossCursor);
             leftTopPoint = event->scenePos();
             isDrawing = true;
         } else if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
@@ -159,32 +159,42 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-//    if (event->KeyPress == Qt::ShiftModifier) {
-//        this->views().at(0)->setCursor(Qt::CrossCursor);
-//    }
-    if(isDrawing) {
-        if(!boxItem) {
-            boxItem = new BoxItem(this->sceneRect(), image->size(), classNameList, classNameList->at(0));
-            this->addItem(boxItem);
-            boxItem->setSelected(true);
+    if (event->buttons() & Qt::LeftButton) {
+        if(isDrawing) {
+            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
+            if(!boxItem) {
+                boxItem = new BoxItem(this->sceneRect(), image->size(), classNameList, classNameList->at(0));
+                this->addItem(boxItem);
+                boxItem->setSelected(true);
+            }
+            rightBottomPoint = event->scenePos();
+            QRect roi(qMin(rightBottomPoint.x(), leftTopPoint.x()),
+                      qMin(rightBottomPoint.y(), leftTopPoint.y()),
+                      qAbs(rightBottomPoint.x() - leftTopPoint.x()),
+                      qAbs(rightBottomPoint.y() - leftTopPoint.y()));
+            int l = sceneRect().left(), r = sceneRect().right(),
+                    t = sceneRect().top(), b = sceneRect().bottom();
+            if (roi.right() < l || roi.left() > r ||
+                    roi.top() > b || roi.bottom() < t )
+                return;
+
+            roi.setTop(qMax(t, roi.top()));
+            roi.setLeft(qMax(l, roi.left()));
+            roi.setBottom(qMin(b, roi.bottom()));
+            roi.setRight(qMin(r, roi.right()));
+
+            boxItem->setRect(roi);
         }
-        rightBottomPoint = event->scenePos();
-        QRect roi(qMin(rightBottomPoint.x(), leftTopPoint.x()),
-                  qMin(rightBottomPoint.y(), leftTopPoint.y()),
-                  qAbs(rightBottomPoint.x() - leftTopPoint.x()),
-                  qAbs(rightBottomPoint.y() - leftTopPoint.y()));
-        int l = sceneRect().left(), r = sceneRect().right(),
-                t = sceneRect().top(), b = sceneRect().bottom();
-        if (roi.right() < l || roi.left() > r ||
-                roi.top() > b || roi.bottom() < t )
-            return;
 
-        roi.setTop(qMax(t, roi.top()));
-        roi.setLeft(qMax(l, roi.left()));
-        roi.setBottom(qMin(b, roi.bottom()));
-        roi.setRight(qMin(r, roi.right()));
-
-        boxItem->setRect(roi);
+        if (_isPanning)
+        {
+            this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
+            QScrollBar *h = this->views().at(0)->horizontalScrollBar();
+            h->setValue(h->value() - (int)(event->scenePos().x() - _dragStart.x()));
+            QScrollBar *v = this->views().at(0)->verticalScrollBar();
+            v->setValue(v->value() - (int)(event->scenePos().y() - _dragStart.y()));
+            _dragEnd = event->scenePos();
+        }
     }
 
     QGraphicsScene::mouseMoveEvent(event);
@@ -192,23 +202,47 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void ViewScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-//    this->views().at(0)->setCursor(Qt::ArrowCursor);
     if (isDrawing) {
         isDrawing = false;
         boxItem = 0;
     }
+    if (_isPanning) {
+        _isPanning = false;
+        this->views().at(0)->viewport()->setCursor(Qt::ArrowCursor);
+    }
     QGraphicsScene::mouseReleaseEvent(event);
 }
 
-void ViewScene::keyPressEvent(QKeyEvent *event)
+void ViewScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-    if(event->key() == Qt::Key_Delete) {
-        deleteBoxItems();
-    } else if(event->key() == Qt::Key_A && event->modifiers() == Qt::ControlModifier) {
-        selectAllBoxItems(true);
-    } else {
-        QGraphicsScene::keyPressEvent(event);
+    if (mouseEvent->buttons() == Qt::LeftButton)
+    {
+        _isPanning = true;
+        _dragStart = mouseEvent->scenePos();
+        this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
     }
+    QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
+}
+
+void ViewScene::keyPressEvent(QKeyEvent *keyEvent)
+{
+    if(keyEvent->key() == Qt::Key_Delete) {
+        deleteBoxItems();
+    } else if(keyEvent->key() == Qt::Key_A && keyEvent->modifiers() == Qt::ControlModifier) {
+        selectAllBoxItems(true);
+    } else if(keyEvent->key() == Qt::Key_Shift) {
+        this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
+    } else {
+        QGraphicsScene::keyPressEvent(keyEvent);
+    }
+}
+
+void ViewScene::keyReleaseEvent(QKeyEvent *keyEvent)
+{
+    if(keyEvent->key() == Qt::Key_Shift) {
+            this->views().at(0)->viewport()->setCursor(Qt::ArrowCursor);
+    }
+    QGraphicsScene::keyReleaseEvent(keyEvent);
 }
 
 /**

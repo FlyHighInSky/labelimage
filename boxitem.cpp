@@ -49,7 +49,7 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
 void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
 {
     event->setAccepted(true);
-    switch (event->button()) {
+    switch (event->buttons()) {
     case Qt::LeftButton:
         _selectedGrabber = getSelectedGrabber(event->pos());
         setGrabberCursor(_selectedGrabber);
@@ -395,8 +395,10 @@ void BoxItem::initContextMenu()
 void BoxItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QAction *selectedAction = _contextMenu.exec(event->screenPos());
-    QString name = selectedAction->text();
-    if (_classNameList->contains(name)) {
-        setLabelClassName(name);
+    if (selectedAction) {
+        QString name = selectedAction->text();
+        if (_classNameList->contains(name)) {
+            setLabelClassName(name);
+        }
     }
 }

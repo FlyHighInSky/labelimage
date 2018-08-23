@@ -25,6 +25,7 @@ public:
 
     QImage *image = nullptr;
     QList<QString> *classNameList = nullptr;
+    bool isDrawing = false;
     void Undo();
     void Redo();
 
@@ -33,16 +34,19 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
+    void keyPressEvent(QKeyEvent *keyEvent);
+    void keyReleaseEvent(QKeyEvent *keyEvent);
     void deleteBoxItems();
     void selectAllBoxItems(bool op);
 private:
     QGraphicsPixmapItem *pixmapItem = nullptr;
     BoxItem* boxItem = nullptr;
     double zoomFactor = 1;
+    QPointF _dragStart, _dragEnd;
+    bool _isPanning = false;
     QPointF leftTopPoint;
     QPointF rightBottomPoint;
-    bool isDrawing = false;
     QString _labelFilePath;
     void loadBoxItemsFromFile();
     void saveBoxItemsToFile();

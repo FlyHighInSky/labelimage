@@ -22,6 +22,9 @@ MainWindow::MainWindow()
     createActions();
     createCentralWindow();
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
+    this->installEventFilter(this);
+    fileListView->installEventFilter(this);
+    imageView->installEventFilter(this);
 }
 /**
  * @brief MainWindow::openDirectory
@@ -39,24 +42,24 @@ void MainWindow::openFolder()
         fileListModel->setNameFilterDisables(0);
         fileListModel->setRootPath(srcImageDir);
 
+        fileListView->setFocus();
         fileListView->setRootIsDecorated(0);
         fileListView->setModel(fileListModel);
         fileListView->setRootIndex(fileListModel->index(srcImageDir));
 
-//        fileListView->setSelectionBehavior(QAbstractItemView::SelectRows);
-//        fileListView->setCurrentIndex(fileListModel->index(0,0, fileListView->rootIndex()));
-//        QItemSelectionModel s;
-//        s.setCurrentIndex();
-//        QModelIndex idx = fileListModel->index(srcImageDir);
-//        QModelIndex m = fileListModel->index(0,0,fileListModel->index(srcImageDir));
-//        s.setCurrentIndex(m, );
-//        fileListView->selectionModel()->setCurrentIndex(m, QItemSelectionModel::Rows | QItemSelectionModel::Select);
+        //        fileListView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        //        fileListView->setCurrentIndex(fileListModel->index(0,0, fileListView->rootIndex()));
+        //        QItemSelectionModel s;
+        //        s.setCurrentIndex();
+        //        QModelIndex idx = fileListModel->index(srcImageDir);
+        QModelIndex m = fileListView->model()->index(1,0,fileListView->rootIndex());
+        fileListView->selectionModel()->setCurrentIndex(m, QItemSelectionModel::Rows | QItemSelectionModel::Select);
 
         connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &MainWindow::onFileSelected);
         loadClassNames(srcImageDir+"/names.txt");
         _viewScene->classNameList = _classNames;
-
+        _viewScene->installEventFilter(this);
     }
 }
 void MainWindow::loadClassNames(QString filePath)
@@ -160,6 +163,15 @@ void MainWindow::createActions()
     // edit menu
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     QToolBar *editToolBar = addToolBar(tr("Edit"));
+
+    // draw
+    const QIcon drawIcon = QIcon::fromTheme("document-open", QIcon(":/images/draw.png"));
+    QAction *drawAct = new QAction(drawIcon, tr("&Draw"), this);
+    drawAct->setShortcut(tr("Ctrl+D"));
+    drawAct->setStatusTip(tr("Draw rectangle"));
+    connect(drawAct, &QAction::triggered, this, &MainWindow::drawing);
+    editMenu->addAction(drawAct);
+    editToolBar->addAction(drawAct);
 
     // undo
     const QIcon undoIcon = QIcon::fromTheme("document-open", QIcon(":/images/undo.png"));
@@ -327,13 +339,30 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 {
     fitViewToWindow();
 }
-void MainWindow::keyPressEvent(QKeyEvent *event)
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if(event->key() == Qt::LeftArrow) {
-        ;
-    } else if (event->key() == Qt::RightArrow) {
-        ;
+    if (obj == _viewScene || obj == this) {
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+            if (keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down) {
+                qApp->sendEvent(fileListView, event);
+                return true;
+            }
+            return false;
+        } else {
+            return false;
+        }
+    } else {
+        // pass the event on to the parent class
+        return QMainWindow::eventFilter(obj, event);
     }
+}
+void MainWindow::drawing()
+{
+    if (!isImageLoaded)
+        return;
+
+//    _viewScene->isDrawing = true;
 }
 void MainWindow::zoomIn()
 {

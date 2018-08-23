@@ -85,6 +85,7 @@ private slots:
     void paste();
     void zoomIn();
     void zoomOut();
+    void drawing();
     void fitViewToWindow();
     void fitViewToActual();
     void fullScreen();
@@ -100,7 +101,7 @@ private:
     void updateActions();
     void scaleImage(double factor);
     void closeEvent(QCloseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event);
 
     void loadClassNames(QString filePath);
     QWidget *centralWidget;
