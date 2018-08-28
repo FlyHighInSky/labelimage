@@ -54,12 +54,12 @@
 #include <QMainWindow>
 #include <QImage>
 #ifndef QT_NO_PRINTER
-#include <QPrinter>
 #include <QTreeView>
 #include <QGraphicsView>
 #include <QFileSystemModel>
 #include <QSplitter>
 #include <QHBoxLayout>
+#include <QImageReader>
 #endif
 #include "viewscene.h"
 

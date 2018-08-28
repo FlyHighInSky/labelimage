@@ -311,7 +311,7 @@ void MainWindow::createCentralWindow()
 }
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (_viewScene != nullptr) {
+    if (_viewScene->isImageLoaded) {
         _viewScene->clear();
     }
 }
@@ -324,7 +324,7 @@ void MainWindow::updateActions()
 
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    if (_viewScene->image != nullptr) {
+    if (_viewScene->isImageLoaded) {
         _viewScene->clear();
     }
     auto index = selected.indexes().first();
@@ -332,6 +332,7 @@ void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelec
 
     imageView->setScene(_viewScene);
     isImageLoaded = true;
+    fitToWindowAct->setChecked(true);
     fitViewToWindow();
 }
 

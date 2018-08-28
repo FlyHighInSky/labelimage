@@ -1,12 +1,12 @@
 QT += widgets
-requires(qtConfig(filedialog))
-qtHaveModule(printsupport): QT += printsupport
+
 
 HEADERS       = \
     mainwindow.h \
     viewscene.h \
     boxitem.h \
-    undohistory.h
+    undohistory.h \
+    FreeImage.h
 SOURCES       = \
                 main.cpp \
     mainwindow.cpp \
@@ -19,3 +19,7 @@ SOURCES       = \
 
 RESOURCES += \
     labelimage.qrc
+
+win32: LIBS += -L$$PWD/lib/ -lFreeImage
+
+DEPENDPATH += $$PWD/.

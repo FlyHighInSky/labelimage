@@ -56,7 +56,7 @@ public:
         info[0] = _box.center().x()*ws;
         info[1] = _box.center().y()*hs;
         info[2] = _box.width()*ws;
-        info[3] = _box.width()*hs;
+        info[3] = _box.height()*hs;
     }
     void setLabelRect(qreal x, qreal y, qreal w, qreal h);
 

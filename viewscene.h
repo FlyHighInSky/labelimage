@@ -10,6 +10,8 @@
 #include "boxitem.h"
 #include <QFileInfo>
 #include <QFile>
+#include <QImageReader>
+#include "FreeImage.h"
 
 class ViewScene : public QGraphicsScene
 {
@@ -23,7 +25,8 @@ public:
     void saveToFile(const QString& path);
     void clear();
 
-    QImage *image = nullptr;
+    QImage *image;
+    bool isImageLoaded = false;
     QList<QString> *classNameList = nullptr;
     bool isDrawing = false;
     void Undo();
@@ -49,7 +52,6 @@ private:
     QPointF rightBottomPoint;
     QString _labelFilePath;
     void loadBoxItemsFromFile();
-    void saveBoxItemsToFile();
-    bool _isLabelFileLoaded = false;
+    void saveBoxItemsToFile();    
 };
 #endif // VIEWSCENE_H

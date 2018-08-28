@@ -8,14 +8,14 @@ ViewScene::ViewScene(QObject* parent):
     pixmapItem(nullptr),
     boxItem(nullptr),
     isDrawing(false),
-    _isLabelFileLoaded(false)
+    isImageLoaded(false)
 {
 }
 
 void ViewScene::clear()
 {
     saveBoxItemsToFile();
-    _isLabelFileLoaded = false;
+    isImageLoaded = false;
 
     if (image != nullptr) {
         delete image;
@@ -30,14 +30,51 @@ void ViewScene::clear()
         }
     }
 }
-void ViewScene::loadImage(QString path)
+void ViewScene::loadImage(QString filename)
 {
-    image = new QImage(path);
+//    image = new QImage(path);
+    // Get image format
+    FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(filename.toStdString().c_str(), 0);
+    if(fif == FIF_UNKNOWN)
+        fif = FreeImage_GetFIFFromFilename(filename.toStdString().c_str());
+    if(fif == FIF_UNKNOWN)
+        return;
+
+    // Load image if possible
+    FIBITMAP *dib = nullptr;
+    if(FreeImage_FIFSupportsReading(fif)) {
+        dib = FreeImage_Load(fif, filename.toStdString().c_str());
+        if(dib == nullptr)
+            return;
+    } else
+        return;
+
+    // Convert to 24bits and save to memory as JPEG
+    FIMEMORY *stream = FreeImage_OpenMemory();
+    // FreeImage can only save 24-bit highcolor or 8-bit greyscale/palette bitmaps as JPEG
+    dib = FreeImage_ConvertTo24Bits(dib);
+    FreeImage_SaveToMemory(FIF_JPEG, dib, stream);
+
+    // Free memory
+    FreeImage_Unload(dib);
+
+    // Load JPEG data
+    BYTE *mem_buffer = nullptr;
+    DWORD size_in_bytes = 0;
+    FreeImage_AcquireMemory(stream, &mem_buffer, &size_in_bytes);
+
+    // Load raw data into QImage and return
+    QByteArray array = QByteArray::fromRawData((char*)mem_buffer, size_in_bytes);
+
+//    image = QImage::fromData(array);
+    image = new QImage();
+    image->loadFromData(array);
+
     pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*image));
     pixmapItem->setTransformationMode(Qt::SmoothTransformation);
     this->addItem(pixmapItem);
 
-    QFileInfo info(path);
+    QFileInfo info(filename);
     _labelFilePath = info.path() + "/" + info.completeBaseName() + ".txt";
 }
 
@@ -98,9 +135,9 @@ void ViewScene::drawView()
     QRect rect(zero, image->size() * zoomFactor);
     setSceneRect(rect);
 
-    if (!_isLabelFileLoaded) {
+    if (!isImageLoaded) {
         loadBoxItemsFromFile();
-        _isLabelFileLoaded = true;
+        isImageLoaded = true;
     }
 
     foreach (QGraphicsItem *item, this->items()) {
