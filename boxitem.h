@@ -34,8 +34,9 @@ enum TaskStatus {
     Waiting
 };
 
-class BoxItem : public QGraphicsItem
+class BoxItem : public QObject, public QGraphicsItem
 {
+    Q_OBJECT
 public:
     BoxItem(QRectF fatherRect, QSize imageSize, QList<QString> *classNameList, QString labelClassName);
 
@@ -66,6 +67,9 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return Type;
     }
+
+signals:
+    void boxSelected(QRect boxRect);
 
 private:
 

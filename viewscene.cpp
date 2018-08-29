@@ -74,6 +74,8 @@ void ViewScene::loadImage(QString filename)
     pixmapItem->setTransformationMode(Qt::SmoothTransformation);
     this->addItem(pixmapItem);
 
+    emit imageLoaded(image->size());
+
     QFileInfo info(filename);
     _labelFilePath = info.path() + "/" + info.completeBaseName() + ".txt";
 }
@@ -101,6 +103,7 @@ void ViewScene::loadBoxItemsFromFile()
             BoxItem *b = new BoxItem(fatherRect, image->size(), classNameList, classNameList->at(cls));
             b->setLabelRect(x,y,w,h);
             b->setRect(x,y,w,h);
+            connect(b, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
 
             this->addItem(b);
         }
@@ -203,6 +206,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 boxItem = new BoxItem(this->sceneRect(), image->size(), classNameList, classNameList->at(0));
                 this->addItem(boxItem);
                 boxItem->setSelected(true);
+                connect(boxItem, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
             }
             rightBottomPoint = event->scenePos();
             QRect roi(qMin(rightBottomPoint.x(), leftTopPoint.x()),
@@ -233,6 +237,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             _dragEnd = event->scenePos();
         }
     }
+    emit cursorMoved(event->scenePos());
 
     QGraphicsScene::mouseMoveEvent(event);
 }

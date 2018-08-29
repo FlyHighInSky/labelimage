@@ -19,12 +19,18 @@
 
 MainWindow::MainWindow()
 {
+    setWindowIcon(QIcon(":/images/draw.png"));
+    setWindowTitle(tr("Image Labeler"));
     createActions();
     createCentralWindow();
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
     this->installEventFilter(this);
     fileListView->installEventFilter(this);
     imageView->installEventFilter(this);
+
+    translator.load(":/languages/zh_CN.qm");
+    qApp->installTranslator( &translator );
+    this->refresh();
 }
 /**
  * @brief MainWindow::openDirectory
@@ -37,6 +43,7 @@ void MainWindow::openFolder()
                                                             QFileDialog::ShowDirsOnly
                                                             | QFileDialog::DontResolveSymlinks);
     if (!srcImageDir.isEmpty()) {
+        setWindowTitle(srcImageDir);
         fileListModel->setFilter(QDir::Files | QDir::NoDotAndDotDot);
         fileListModel->setNameFilters(filters);
         fileListModel->setNameFilterDisables(0);
@@ -138,12 +145,12 @@ void MainWindow::about()
 void MainWindow::createActions()
 {
     // file menu
-    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    QToolBar *fileToolBar = addToolBar(tr("File"));
+    fileMenu = menuBar()->addMenu(tr("&File"));
+    fileToolBar = addToolBar(tr("File"));
 
     // open folder
     const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(":/images/folder.png"));
-    QAction *openAct = new QAction(openIcon, tr("&Open Folder..."), this);
+    openAct = new QAction(openIcon, tr("&Open Folder..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an image folder"));
     connect(openAct, &QAction::triggered, this, &MainWindow::openFolder);
@@ -152,7 +159,7 @@ void MainWindow::createActions()
 
     // quit
     const QIcon exitIcon = QIcon::fromTheme("application-exit", QIcon(":/images/quit.png"));
-    QAction *exitAct = fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
+    exitAct = fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
     exitAct->setShortcut(tr("Ctrl+Q"));
     exitAct->setStatusTip(tr("Exit the application"));
     fileMenu->addAction(exitAct);
@@ -161,12 +168,12 @@ void MainWindow::createActions()
     menuBar()->addSeparator();
 
     // edit menu
-    QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-    QToolBar *editToolBar = addToolBar(tr("Edit"));
+    editMenu = menuBar()->addMenu(tr("&Edit"));
+    editToolBar = addToolBar(tr("Edit"));
 
     // draw
     const QIcon drawIcon = QIcon::fromTheme("document-open", QIcon(":/images/draw.png"));
-    QAction *drawAct = new QAction(drawIcon, tr("&Draw"), this);
+    drawAct = new QAction(drawIcon, tr("&Draw"), this);
     drawAct->setShortcut(tr("Ctrl+D"));
     drawAct->setStatusTip(tr("Draw rectangle"));
     connect(drawAct, &QAction::triggered, this, &MainWindow::drawing);
@@ -175,7 +182,7 @@ void MainWindow::createActions()
 
     // undo
     const QIcon undoIcon = QIcon::fromTheme("document-open", QIcon(":/images/undo.png"));
-    QAction *undoAct = new QAction(undoIcon, tr("&Undo"), this);
+    undoAct = new QAction(undoIcon, tr("&Undo"), this);
     undoAct->setShortcut(QKeySequence::Undo);
     undoAct->setStatusTip(tr("Undo the draw"));
     editMenu->addAction(undoAct);
@@ -183,7 +190,7 @@ void MainWindow::createActions()
 
     // redo
     const QIcon redoIcon = QIcon::fromTheme("document-open", QIcon(":/images/redo.png"));
-    QAction *redoAct = new QAction(redoIcon, tr("&Redo"), this);
+    redoAct = new QAction(redoIcon, tr("&Redo"), this);
     redoAct->setShortcut(QKeySequence::Redo);
     redoAct->setStatusTip(tr("Undo the draw"));
     editMenu->addAction(redoAct);
@@ -192,12 +199,12 @@ void MainWindow::createActions()
     menuBar()->addSeparator();
 
     // view menu
-    QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
-    QToolBar *viewToolBar = addToolBar(tr("View"));
+    viewMenu = menuBar()->addMenu(tr("&View"));
+    viewToolBar = addToolBar(tr("View"));
 
     // zoom in
     const QIcon zoomInIcon = QIcon::fromTheme("document-open", QIcon(":/images/zoom-in.png"));
-    QAction *zoomInAct = new QAction(zoomInIcon, tr("Zoom &In"), this);
+    zoomInAct = new QAction(zoomInIcon, tr("Zoom &In"), this);
     zoomInAct->setShortcut(QKeySequence::ZoomIn);
     zoomInAct->setStatusTip(tr("Zoom In Image"));
     connect(zoomInAct, &QAction::triggered, this, &MainWindow::zoomIn);
@@ -206,7 +213,7 @@ void MainWindow::createActions()
 
     // zoom out
     const QIcon zoomOutIcon = QIcon::fromTheme("document-open", QIcon(":/images/zoom-out.png"));
-    QAction *zoomOutAct = new QAction(zoomOutIcon, tr("Zoom &Out"), this);
+    zoomOutAct = new QAction(zoomOutIcon, tr("Zoom &Out"), this);
     zoomOutAct->setShortcut(QKeySequence::ZoomOut);
     zoomOutAct->setStatusTip(tr("Zoom Out Image"));
     connect(zoomOutAct, &QAction::triggered, this, &MainWindow::zoomOut);
@@ -226,7 +233,7 @@ void MainWindow::createActions()
 
     // actual size
     const QIcon actualSizeIcon = QIcon::fromTheme("document-open", QIcon(":/images/actual-size.png"));
-    QAction *actualSizeAct = new QAction(actualSizeIcon, tr("&Actual Size"), this);
+    actualSizeAct = new QAction(actualSizeIcon, tr("&Actual Size"), this);
     actualSizeAct->setShortcut(tr("Ctrl+R"));
     actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
     connect(actualSizeAct, &QAction::triggered, this, &MainWindow::fitViewToActual);
@@ -237,7 +244,7 @@ void MainWindow::createActions()
 
     // full screen
     const QIcon fullscreenIcon = QIcon::fromTheme("document-open", QIcon(":/images/fullscreen.png"));
-    QAction *fullscreenAct = new QAction(fullscreenIcon, tr("&Full Screen"), this);
+    fullscreenAct = new QAction(fullscreenIcon, tr("&Full Screen"), this);
     fullscreenAct->setShortcut(tr("Alt+Enter"));
     fullscreenAct->setStatusTip(tr("Full Screen"));
     connect(fullscreenAct, &QAction::triggered, this, &MainWindow::fullScreen);
@@ -245,44 +252,157 @@ void MainWindow::createActions()
     viewToolBar->addAction(fullscreenAct);
 
     // help menu
-    QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
-    QToolBar *helpToolBar = addToolBar(tr("Help"));
+    helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpToolBar = addToolBar(tr("Help"));
 
-    //    // 语言
-    //    QMenu *languageMenu = helpMenu->addMenu(
-    //                QIcon::fromTheme("document-open", QIcon(":/images/language.png")), tr("&Language"));
-    //    languageMenu->setStatusTip(tr("Select language"));
+    // language
+    languageMenu = helpMenu->addMenu(
+                QIcon::fromTheme("document-open", QIcon(":/images/language.png")), tr("&Language"));
+    languageMenu->setStatusTip(tr("Select language"));
 
-    //    // 中文
-    //    QAction *zhCNAct = languageMenu->addAction(
-    //                QIcon::fromTheme("document-open", QIcon(":/images/zh_CN.png")),
-    //                tr("&Chinese"));
-    //    languageMenu->addAction(zhCNAct);
-    //    helpToolBar->addAction(zhCNAct);
-    //    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+    // Chinese
+    zhCNAct = languageMenu->addAction(
+                QIcon::fromTheme("document-open", QIcon(":/images/zh_CN.png")),
+                tr("&Chinese"));
+    languageMenu->addAction(zhCNAct);
+    helpToolBar->addAction(zhCNAct);
+    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
-    //    // 英文
-    //    QAction *enUSAct = languageMenu->addAction(
-    //                QIcon::fromTheme("document-open", QIcon(":/images/en_US.png")),
-    //                tr("&English"));
-    //    languageMenu->addAction(enUSAct);
-    //    helpToolBar->addAction(enUSAct);
-    //    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+    // English
+    enUSAct = languageMenu->addAction(
+                QIcon::fromTheme("document-open", QIcon(":/images/en_US.png")),
+                tr("&English"));
+    languageMenu->addAction(enUSAct);
+    helpToolBar->addAction(enUSAct);
+    connect(enUSAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
-    //    // 帮助按钮
-    //    QAction *helpAct = helpMenu->addAction(
-    //                QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
-    //                tr("&Help"), this, &MainWindow::about);
-    //    helpAct->setStatusTip(tr("Show the application's About box"));
-    //    helpAct->setShortcut(QKeySequence::HelpContents);
-    //    helpToolBar->addAction(helpAct);
+    // help
+    helpAct = helpMenu->addAction(
+                QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
+                tr("&Help"), this, &MainWindow::about);
+    helpAct->setStatusTip(tr("Show the application's About box"));
+    helpAct->setShortcut(QKeySequence::HelpContents);
+    helpToolBar->addAction(helpAct);
 
-    //    // 关于按钮
-    //    QAction *aboutAct = helpMenu->addAction(
-    //                QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
-    //                tr("&About"), qApp, &QApplication::aboutQt);
-    //    aboutAct->setStatusTip(tr("Show the Qt library's About box"));
-    //    helpToolBar->addAction(aboutAct);
+    // about
+    aboutAct = helpMenu->addAction(
+                QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
+                tr("&About"), qApp, &QApplication::aboutQt);
+    aboutAct->setStatusTip(tr("Show the Qt library's About box"));
+    helpToolBar->addAction(aboutAct);
+}
+
+void MainWindow::switchLanguage()
+{
+    if (this->sender() == zhCNAct) {
+        translator.load(":/languages/zh_CN.qm");
+    } else if (this->sender() == enUSAct) {
+        translator.load(":/languages/en_US.qm");
+    }
+    qApp->installTranslator( &translator );
+    this->refresh();
+}
+
+void MainWindow::refresh()
+{
+    // file menu
+    fileMenu->setTitle(tr("&File"));
+//    fileToolBar->setTitle(tr("File"));
+
+    // open folder
+    openAct->setText(tr("&Open Folder..."));
+    openAct->setStatusTip(tr("Open an image folder"));
+
+    // quit
+    exitAct->setText(tr("E&xit"));
+    exitAct->setShortcut(tr("Ctrl+Q"));
+    exitAct->setStatusTip(tr("Exit the application"));
+
+    // edit menu
+    editMenu->setTitle(tr("&Edit"));
+//    editToolBar->setTitle(tr("Edit"));
+
+    // draw
+    drawAct ->setText(tr("&Draw"));
+    drawAct->setShortcut(tr("Ctrl+D"));
+    drawAct->setStatusTip(tr("Draw rectangle"));
+
+    // undo
+    undoAct->setText(tr("&Undo"));
+    undoAct->setShortcut(QKeySequence::Undo);
+    undoAct->setStatusTip(tr("Undo the draw"));
+
+    // redo
+    redoAct->setText(tr("&Redo"));
+    redoAct->setShortcut(QKeySequence::Redo);
+    redoAct->setStatusTip(tr("Undo the draw"));
+
+    // view menu
+    viewMenu->setTitle(tr("&View"));
+//    viewToolBar->setTitle(tr("View"));
+
+    // zoom in
+    zoomInAct->setText(tr("Zoom &In"));
+    zoomInAct->setShortcut(QKeySequence::ZoomIn);
+    zoomInAct->setStatusTip(tr("Zoom In Image"));
+    // zoom out
+    zoomOutAct->setText(tr("Zoom &Out"));
+    zoomOutAct->setShortcut(QKeySequence::ZoomOut);
+    zoomOutAct->setStatusTip(tr("Zoom Out Image"));
+    // fit to window
+    fitToWindowAct->setText(tr("&Fit To Window"));
+    fitToWindowAct->setShortcut(tr("Ctrl+F"));
+    fitToWindowAct->setStatusTip(tr("Fit View To Window"));
+
+    // actual size
+    actualSizeAct->setText(tr("&Actual Size"));
+    actualSizeAct->setShortcut(tr("Ctrl+R"));
+    actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
+
+    // full screen
+    fullscreenAct->setText(tr("&Full Screen"));
+    fullscreenAct->setShortcut(tr("Alt+Enter"));
+    fullscreenAct->setStatusTip(tr("Full Screen"));
+    // help menu
+    helpMenu->setTitle(tr("&Help"));
+//    helpToolBar = addToolBar(tr("Help"));
+
+    // language
+    languageMenu->setTitle(tr("&Language"));
+    languageMenu->setStatusTip(tr("Select language"));
+
+    // Chinese
+    zhCNAct->setText(tr("&Chinese"));
+
+    // English
+    enUSAct->setText(tr("&English"));
+
+    // help
+    helpAct->setText(tr("&Help"));
+    helpAct->setStatusTip(tr("Show the application's About box"));
+
+    // about
+    aboutAct->setText(tr("&About"));
+    aboutAct->setToolTip(tr("Show the Qt library's About box"));
+
+    // status bar
+    if (!_imageSize.isNull())
+        _labelImageSize->setText(QString(tr("Image: %1 x %2"))
+                                 .arg(_imageSize.width())
+                                 .arg(_imageSize.height())
+                                 .toUtf8());
+    if (!_boxRect.isNull())
+        _labelBoxRect->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4"))
+                               .arg(_boxRect.left())
+                               .arg(_boxRect.top())
+                               .arg(_boxRect.width())
+                               .arg(_boxRect.height())
+                               .toUtf8());
+    if (!_cursorPos.isNull())
+        _labelCursorPos->setText(QString(tr("Cursor: %1, %2"))
+                                 .arg(_cursorPos.x())
+                                 .arg(_cursorPos.y())
+                                 .toUtf8());
 }
 
 void MainWindow::createCentralWindow()
@@ -293,6 +413,10 @@ void MainWindow::createCentralWindow()
     imageView = new QGraphicsView(this);
     imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     _viewScene = new ViewScene(this);
+
+    connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
+    connect(_viewScene, SIGNAL(boxSelected(QRect)), this, SLOT(updateLabelBoxRect(QRect)));
+    connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
 
     fileListModel = new QFileSystemModel(this);
     filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
@@ -308,13 +432,22 @@ void MainWindow::createCentralWindow()
     centralWidget->setLayout(horizontalLayout);
     this->setCentralWidget(centralWidget);
 
+    _labelCursorPos = new QLabel();
+    _labelImageSize = new QLabel();
+    _labelBoxRect = new QLabel();
+    this->statusBar()->addPermanentWidget(new QLabel(), 1);
+    this->statusBar()->addPermanentWidget(_labelCursorPos, 1);
+    this->statusBar()->addPermanentWidget(_labelBoxRect, 1);
+    this->statusBar()->addPermanentWidget(_labelImageSize, 1);
 }
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if (_viewScene->isImageLoaded) {
         _viewScene->clear();
     }
 }
+
 void MainWindow::updateActions()
 {
     copyAct->setEnabled(!image.isNull());
@@ -340,6 +473,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 {
     fitViewToWindow();
 }
+
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
     if (obj == _viewScene || obj == this) {
@@ -358,6 +492,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         return QMainWindow::eventFilter(obj, event);
     }
 }
+
 void MainWindow::drawing()
 {
     if (!isImageLoaded)
@@ -365,6 +500,7 @@ void MainWindow::drawing()
 
 //    _viewScene->isDrawing = true;
 }
+
 void MainWindow::zoomIn()
 {
     if (!isImageLoaded)
@@ -440,4 +576,33 @@ void MainWindow::fullScreen()
 
     fileListView->setVisible(!makeFullscreen);
     setWindowState(makeFullscreen ? Qt::WindowFullScreen : Qt::WindowMaximized);
+}
+
+void MainWindow::updateLabelImageSize(QSize imageSize)
+{
+    _imageSize = imageSize;
+    _labelImageSize->setText(QString(tr("Image: %1 x %2"))
+        .arg(_imageSize.width())
+        .arg(_imageSize.height())
+        .toUtf8());
+}
+
+void MainWindow::updateLabelBoxRect(QRect boxRect)
+{
+    _boxRect = boxRect;
+    _labelBoxRect->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4"))
+        .arg(_boxRect.left())
+        .arg(_boxRect.top())
+        .arg(_boxRect.width())
+        .arg(_boxRect.height())
+        .toUtf8());
+}
+
+void MainWindow::updateLabelCursorPos(QPointF cursorPos)
+{
+    _cursorPos = cursorPos;
+    _labelCursorPos->setText(QString(tr("Cursor: %1, %2"))
+        .arg(_cursorPos.x())
+        .arg(_cursorPos.y())
+        .toUtf8());
 }

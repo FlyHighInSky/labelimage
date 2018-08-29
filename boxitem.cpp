@@ -214,6 +214,12 @@ void BoxItem::setRect(const QRectF &rect)
     if (halfpw > 0.0)
         _boundingRect.adjust(-halfpw, -halfpw, halfpw, halfpw);
 
+    qreal _xScale = _imageWidth*1.0/_fatherRect.width();
+    qreal _yScale = _imageHeight*1.0/_fatherRect.height();
+    QRect r((int)(_box.left()*_xScale), (int)(_box.top()*_yScale),
+            (int)(_box.width()*_xScale), (int)(_box.height()*_yScale));
+    emit boxSelected(r);
+
     this->update();
 }
 void BoxItem::setLabelClassName(QString name)
@@ -255,9 +261,14 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
     _textRect.setPos(_box.topLeft());
     qreal _xScale = _imageWidth*1.0/_fatherRect.width();
     qreal _yScale = _imageHeight*1.0/_fatherRect.height();
+
+    QRect r((int)(_box.left()*_xScale), (int)(_box.top()*_yScale),
+            (int)(_box.width()*_xScale), (int)(_box.height()*_yScale));
     QString rectInfo = QString("[%1,%2,%3,%4]")
-            .arg((int)(_box.left()*_xScale)).arg((int)(_box.top()*_yScale))
-            .arg((int)(_box.width()*_xScale)).arg((int)(_box.height()*_yScale));
+            .arg(r.left()).arg(r.top())
+            .arg(r.width()).arg(r.height());
+//    emit boxSelected(r);
+
     _textRect.setPlainText(rectInfo);
 
     _textName.setPos(_box.bottomLeft());

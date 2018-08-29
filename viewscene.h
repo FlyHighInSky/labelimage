@@ -15,6 +15,7 @@
 
 class ViewScene : public QGraphicsScene
 {
+    Q_OBJECT
 public:
     ViewScene(QObject* parent = 0);
 
@@ -31,6 +32,11 @@ public:
     bool isDrawing = false;
     void Undo();
     void Redo();
+signals:
+    void imageLoaded(QSize imageSize);
+    void cursorMoved(QPointF cursorPos);
+    void boxSelected(QRect boxRect);
+
 
 protected:
     void drawView();
@@ -52,6 +58,6 @@ private:
     QPointF rightBottomPoint;
     QString _labelFilePath;
     void loadBoxItemsFromFile();
-    void saveBoxItemsToFile();    
+    void saveBoxItemsToFile();
 };
 #endif // VIEWSCENE_H

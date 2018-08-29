@@ -23,3 +23,8 @@ RESOURCES += \
 win32: LIBS += -L$$PWD/lib/ -lFreeImage
 
 DEPENDPATH += $$PWD/.
+
+TRANSLATIONS += $$PWD/languages/zh_CN.ts \
+               $$PWD/languages/en_US.ts
+
+CODECFORSRC = UTF-8

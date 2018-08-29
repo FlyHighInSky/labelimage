@@ -53,6 +53,7 @@
 
 #include <QMainWindow>
 #include <QImage>
+#include <QTranslator>
 #ifndef QT_NO_PRINTER
 #include <QTreeView>
 #include <QGraphicsView>
@@ -91,6 +92,10 @@ private slots:
     void fullScreen();
     void about();
     void onFileSelected(const QItemSelection& selected, const QItemSelection& deselected);
+    void updateLabelImageSize(QSize imageSize);
+    void updateLabelCursorPos(QPointF cursorPos);
+    void updateLabelBoxRect(QRect boxRect);
+    void switchLanguage();
 
 private:
     void wheelEvent(QWheelEvent *event);
@@ -102,6 +107,7 @@ private:
     void scaleImage(double factor);
     void closeEvent(QCloseEvent *event);
     bool eventFilter(QObject *obj, QEvent *event);
+    void refresh();
 
     void loadClassNames(QString filePath);
     QWidget *centralWidget;
@@ -118,10 +124,35 @@ private:
     bool isImageLoaded =  false;
     QScrollArea *scrollArea;
     double scaleFactor;
+    QLabel *_labelCursorPos, *_labelImageSize, *_labelBoxRect;
+    QPointF _cursorPos;
+    QSize _imageSize;
+    QRect _boxRect;
 
     QAction *copyAct;
+    QTranslator translator;
+
+    QAction *zhCNAct, *enUSAct;
+    QMenu *fileMenu;
+    QToolBar *fileToolBar;
+    QAction *openAct;
+    QAction *exitAct;
+    QMenu *editMenu;
+    QToolBar *editToolBar;
+    QAction *drawAct;
+    QAction *undoAct;
+    QAction *redoAct;
+    QMenu *viewMenu;
+    QToolBar *viewToolBar;
     QAction *zoomInAct;
     QAction *zoomOutAct;
+    QAction *actualSizeAct;
+    QAction *fullscreenAct;
+    QMenu *helpMenu;
+    QToolBar *helpToolBar;
+    QMenu *languageMenu;
+    QAction *helpAct;
+    QAction *aboutAct;
 };
 //! [0]
 
