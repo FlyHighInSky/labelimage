@@ -28,7 +28,8 @@ MainWindow::MainWindow()
     fileListView->installEventFilter(this);
     imageView->installEventFilter(this);
 
-    translator.load(":/languages/zh_CN.qm");
+    _languageFile = ":/languages/zh_CN.qm";
+    translator.load(_languageFile);
     qApp->installTranslator( &translator );
     this->refresh();
 }
@@ -64,17 +65,23 @@ void MainWindow::openFolder()
 
         connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &MainWindow::onFileSelected);
-        loadClassNames(srcImageDir+"/names.txt");
+        _typeFileName = srcImageDir + "/names.txt";
+        loadClassNames(_typeFileName);
+        editAct->setEnabled(true);
+        if (_classNames->count() <= 0) {
+            editTargetType();
+        }
         _viewScene->classNameList = _classNames;
         _viewScene->installEventFilter(this);
     }
 }
+
 void MainWindow::loadClassNames(QString filePath)
 {
     QFile file(filePath);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
 
-    _classNames = new QList<QString>();
+    _classNames = new QStringList();
 
     QTextStream in(&file);
     while (!in.atEnd()) {
@@ -85,6 +92,7 @@ void MainWindow::loadClassNames(QString filePath)
     }
     file.close();
 }
+
 void MainWindow::copy()
 {
 #ifndef QT_NO_CLIPBOARD
@@ -122,21 +130,18 @@ void MainWindow::paste()
 #endif // !QT_NO_CLIPBOARD
 }
 
+void MainWindow::help()
+{
+    _helpMessageBox.about(this,
+                          qApp->translate("MainWindow", "Help"),
+                          qApp->translate("MainWindow", helpText));
+}
+
 void MainWindow::about()
 {
-    QMessageBox::about(this, tr("About Image Viewer"),
-                       tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
-                          "and QScrollArea to display an image. QLabel is typically used "
-                          "for displaying a text, but it can also display an image. "
-                          "QScrollArea provides a scrolling view around another widget. "
-                          "If the child widget exceeds the size of the frame, QScrollArea "
-                          "automatically provides scroll bars. </p><p>The example "
-                          "demonstrates how QLabel's ability to scale its contents "
-                          "(QLabel::scaledContents), and QScrollArea's ability to "
-                          "automatically resize its contents "
-                          "(QScrollArea::widgetResizable), can be used to implement "
-                          "zooming and scaling features. </p><p>In addition the example "
-                          "shows how to use QPainter to print an image.</p>"));
+    _aboutMessageBox.about(this,
+                           qApp->translate("MainWindow", "About Image Labeler"),
+                           qApp->translate("MainWindow", aboutText));
 }
 
 /**
@@ -171,14 +176,15 @@ void MainWindow::createActions()
     editMenu = menuBar()->addMenu(tr("&Edit"));
     editToolBar = addToolBar(tr("Edit"));
 
-    // draw
-    const QIcon drawIcon = QIcon::fromTheme("document-open", QIcon(":/images/draw.png"));
-    drawAct = new QAction(drawIcon, tr("&Draw"), this);
-    drawAct->setShortcut(tr("Ctrl+D"));
-    drawAct->setStatusTip(tr("Draw rectangle"));
-    connect(drawAct, &QAction::triggered, this, &MainWindow::drawing);
-    editMenu->addAction(drawAct);
-    editToolBar->addAction(drawAct);
+    // edit target type
+    const QIcon editIcon = QIcon::fromTheme("document-open", QIcon(":/images/edit.png"));
+    editAct = new QAction(editIcon, tr("&Target Type"), this);
+    editAct->setShortcut(tr("Ctrl+T"));
+    editAct->setStatusTip(tr("Edit Target Type"));
+    connect(editAct, &QAction::triggered, this, &MainWindow::editTargetType);
+    editMenu->addAction(editAct);
+    editToolBar->addAction(editAct);
+    editAct->setEnabled(false);
 
     // undo
     const QIcon undoIcon = QIcon::fromTheme("document-open", QIcon(":/images/undo.png"));
@@ -279,26 +285,28 @@ void MainWindow::createActions()
     // help
     helpAct = helpMenu->addAction(
                 QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
-                tr("&Help"), this, &MainWindow::about);
-    helpAct->setStatusTip(tr("Show the application's About box"));
+                tr("&Help"), this, &MainWindow::help);
+    helpAct->setStatusTip(tr("Help"));
     helpAct->setShortcut(QKeySequence::HelpContents);
     helpToolBar->addAction(helpAct);
 
     // about
     aboutAct = helpMenu->addAction(
                 QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
-                tr("&About"), qApp, &QApplication::aboutQt);
-    aboutAct->setStatusTip(tr("Show the Qt library's About box"));
+                tr("&About"), this, &MainWindow::about);
+    aboutAct->setStatusTip(tr("About Image Labeler"));
     helpToolBar->addAction(aboutAct);
 }
 
 void MainWindow::switchLanguage()
 {
+    qApp->removeTranslator( &translator );
     if (this->sender() == zhCNAct) {
-        translator.load(":/languages/zh_CN.qm");
+        _languageFile = ":/languages/zh_CN.qm";
     } else if (this->sender() == enUSAct) {
-        translator.load(":/languages/en_US.qm");
+        _languageFile = ":/languages/en_US.qm";
     }
+    translator.load(_languageFile);
     qApp->installTranslator( &translator );
     this->refresh();
 }
@@ -307,7 +315,7 @@ void MainWindow::refresh()
 {
     // file menu
     fileMenu->setTitle(tr("&File"));
-//    fileToolBar->setTitle(tr("File"));
+    //    fileToolBar->setTitle(tr("File"));
 
     // open folder
     openAct->setText(tr("&Open Folder..."));
@@ -320,12 +328,12 @@ void MainWindow::refresh()
 
     // edit menu
     editMenu->setTitle(tr("&Edit"));
-//    editToolBar->setTitle(tr("Edit"));
+    //    editToolBar->setTitle(tr("Edit"));
 
     // draw
-    drawAct ->setText(tr("&Draw"));
-    drawAct->setShortcut(tr("Ctrl+D"));
-    drawAct->setStatusTip(tr("Draw rectangle"));
+    editAct ->setText(tr("&Draw"));
+    editAct->setShortcut(tr("Ctrl+D"));
+    editAct->setStatusTip(tr("Draw rectangle"));
 
     // undo
     undoAct->setText(tr("&Undo"));
@@ -339,7 +347,7 @@ void MainWindow::refresh()
 
     // view menu
     viewMenu->setTitle(tr("&View"));
-//    viewToolBar->setTitle(tr("View"));
+    //    viewToolBar->setTitle(tr("View"));
 
     // zoom in
     zoomInAct->setText(tr("Zoom &In"));
@@ -365,7 +373,7 @@ void MainWindow::refresh()
     fullscreenAct->setStatusTip(tr("Full Screen"));
     // help menu
     helpMenu->setTitle(tr("&Help"));
-//    helpToolBar = addToolBar(tr("Help"));
+    //    helpToolBar = addToolBar(tr("Help"));
 
     // language
     languageMenu->setTitle(tr("&Language"));
@@ -379,14 +387,14 @@ void MainWindow::refresh()
 
     // help
     helpAct->setText(tr("&Help"));
-    helpAct->setStatusTip(tr("Show the application's About box"));
+    helpAct->setStatusTip(tr("Help"));
 
     // about
     aboutAct->setText(tr("&About"));
-    aboutAct->setToolTip(tr("Show the Qt library's About box"));
+    aboutAct->setToolTip(tr("About Image Labeler"));
 
     // status bar
-    if (!_imageSize.isNull())
+    if (!_imageSize.isEmpty())
         _labelImageSize->setText(QString(tr("Image: %1 x %2"))
                                  .arg(_imageSize.width())
                                  .arg(_imageSize.height())
@@ -493,12 +501,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     }
 }
 
-void MainWindow::drawing()
+void MainWindow::editTargetType()
 {
-    if (!isImageLoaded)
-        return;
-
-//    _viewScene->isDrawing = true;
+    //    if (!isImageLoaded)
+    //        return;
+    TypeEditDialog* d = new TypeEditDialog(this, _typeFileName, _languageFile);
+    int resutl = d->exec();
+    if (resutl == QDialog::Accepted) {
+        delete d;
+    }
+    //    _viewScene->isDrawing = true;
 }
 
 void MainWindow::zoomIn()
@@ -582,27 +594,27 @@ void MainWindow::updateLabelImageSize(QSize imageSize)
 {
     _imageSize = imageSize;
     _labelImageSize->setText(QString(tr("Image: %1 x %2"))
-        .arg(_imageSize.width())
-        .arg(_imageSize.height())
-        .toUtf8());
+                             .arg(_imageSize.width())
+                             .arg(_imageSize.height())
+                             .toUtf8());
 }
 
 void MainWindow::updateLabelBoxRect(QRect boxRect)
 {
     _boxRect = boxRect;
     _labelBoxRect->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4"))
-        .arg(_boxRect.left())
-        .arg(_boxRect.top())
-        .arg(_boxRect.width())
-        .arg(_boxRect.height())
-        .toUtf8());
+                           .arg(_boxRect.left())
+                           .arg(_boxRect.top())
+                           .arg(_boxRect.width())
+                           .arg(_boxRect.height())
+                           .toUtf8());
 }
 
 void MainWindow::updateLabelCursorPos(QPointF cursorPos)
 {
     _cursorPos = cursorPos;
     _labelCursorPos->setText(QString(tr("Cursor: %1, %2"))
-        .arg(_cursorPos.x())
-        .arg(_cursorPos.y())
-        .toUtf8());
+                             .arg(_cursorPos.x())
+                             .arg(_cursorPos.y())
+                             .toUtf8());
 }

@@ -6,12 +6,14 @@ HEADERS       = \
     viewscene.h \
     boxitem.h \
     undohistory.h \
-    FreeImage.h
+    FreeImage.h \
+    typeeditdialog.h
 SOURCES       = \
                 main.cpp \
     mainwindow.cpp \
     viewscene.cpp \
-    boxitem.cpp
+    boxitem.cpp \
+    typeeditdialog.cpp
 
 # install
 # target.path = $$[QT_INSTALL_EXAMPLES]/widgets/widgets/labelimage
@@ -28,3 +30,5 @@ TRANSLATIONS += $$PWD/languages/zh_CN.ts \
                $$PWD/languages/en_US.ts
 
 CODECFORSRC = UTF-8
+
+win32: RC_ICONS += images/draw.ico

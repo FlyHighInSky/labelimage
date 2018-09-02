@@ -10,7 +10,6 @@
         <file>images/undo.png</file>
         <file>images/zoom-in.png</file>
         <file>images/zoom-out.png</file>
-        <file>images/draw.png</file>
         <file>images/about.png</file>
         <file>images/en_US.png</file>
         <file>images/help.png</file>
@@ -18,5 +17,7 @@
         <file>images/zh_CN.png</file>
         <file>languages/en_US.qm</file>
         <file>languages/zh_CN.qm</file>
+        <file>images/draw.ico</file>
+        <file>images/edit.png</file>
     </qresource>
 </RCC>

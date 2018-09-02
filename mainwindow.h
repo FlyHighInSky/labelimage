@@ -63,6 +63,8 @@
 #include <QImageReader>
 #endif
 #include "viewscene.h"
+#include <QMessageBox>
+#include "typeeditdialog.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -86,10 +88,11 @@ private slots:
     void paste();
     void zoomIn();
     void zoomOut();
-    void drawing();
+    void editTargetType();
     void fitViewToWindow();
     void fitViewToActual();
     void fullScreen();
+    void help();
     void about();
     void onFileSelected(const QItemSelection& selected, const QItemSelection& deselected);
     void updateLabelImageSize(QSize imageSize);
@@ -120,7 +123,9 @@ private:
     ViewScene *_viewScene = nullptr;
     QFileSystemModel *fileListModel;
     QStringList filters;
-    QList<QString> *_classNames = nullptr;
+    QStringList*_classNames = nullptr;
+    QString _languageFile;
+    QString _typeFileName;
     bool isImageLoaded =  false;
     QScrollArea *scrollArea;
     double scaleFactor;
@@ -139,7 +144,7 @@ private:
     QAction *exitAct;
     QMenu *editMenu;
     QToolBar *editToolBar;
-    QAction *drawAct;
+    QAction *editAct;
     QAction *undoAct;
     QAction *redoAct;
     QMenu *viewMenu;
@@ -153,6 +158,18 @@ private:
     QMenu *languageMenu;
     QAction *helpAct;
     QAction *aboutAct;
+    QMessageBox _helpMessageBox, _aboutMessageBox;
+    const char *helpText = "<p>"
+                           "Press <b>Right Mouse Button</b> on selected box to change target type.<br />"
+                           "<hr />"
+                           "<b>Shift Key + Left Mouse Button:</b> Draw Box<br />"
+                           "<hr />"
+                           "<b>Delete Key:</b> Delete Selected Box<br />"
+                           "<hr />"
+                           "<b>Ctrl + A:</b> Select All Boxes<br />"
+                           "<hr />"
+                           "<b>Up/Down Arrow Key:</b> Switch images</p>";
+    const char *aboutText = "<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>";
 };
 //! [0]
 

@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <QCommandLineParser>
-
+#include "typeeditdialog.h"
 #include "mainwindow.h"
 int main(int argc, char *argv[])
 {
@@ -12,7 +12,10 @@ int main(int argc, char *argv[])
     commandLineParser.addPositionalArgument(MainWindow::tr("[file]"), MainWindow::tr("Image file to open."));
     commandLineParser.process(QCoreApplication::arguments());
 
-    MainWindow mainWindow;    
+    MainWindow mainWindow;
     mainWindow.show();
+
+//    TypeEditDialog d;
+//    d.show();
     return app.exec();
 }

@@ -267,7 +267,6 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
     QString rectInfo = QString("[%1,%2,%3,%4]")
             .arg(r.left()).arg(r.top())
             .arg(r.width()).arg(r.height());
-//    emit boxSelected(r);
 
     _textRect.setPlainText(rectInfo);
 
