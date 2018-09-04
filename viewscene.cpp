@@ -4,11 +4,12 @@
 
 ViewScene::ViewScene(QObject* parent):
     QGraphicsScene(parent),
-    image(nullptr),
-    pixmapItem(nullptr),
-    boxItem(nullptr),
-    isDrawing(false),
-    isImageLoaded(false)
+    _image(nullptr),
+    _pixmapItem(nullptr),
+    _boxItem(nullptr),
+    _isDrawing(false),
+    isImageLoaded(false),
+   _undoStack(new QUndoStack)
 {
 }
 
@@ -17,19 +18,21 @@ void ViewScene::clear()
     saveBoxItemsToFile();
     isImageLoaded = false;
 
-    if (image != nullptr) {
-        delete image;
-        image = nullptr;
+    if (_image != nullptr) {
+        delete _image;
+        _image = nullptr;
     }
 
     foreach (QGraphicsItem *item, this->items()) {
         if ((item->type() == QGraphicsItem::UserType+1) ||
             (item->type() == QGraphicsPixmapItem::Type) ) {
             this->removeItem(item);
+//            this->unregisterItem(qgraphicsitem_cast<BoxItem *>(item));
             delete item;
         }
     }
 }
+
 void ViewScene::loadImage(QString filename)
 {
 //    image = new QImage(path);
@@ -67,14 +70,14 @@ void ViewScene::loadImage(QString filename)
     QByteArray array = QByteArray::fromRawData((char*)mem_buffer, size_in_bytes);
 
 //    image = QImage::fromData(array);
-    image = new QImage();
-    image->loadFromData(array);
+    _image = new QImage();
+    _image->loadFromData(array);
 
-    pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*image));
-    pixmapItem->setTransformationMode(Qt::SmoothTransformation);
-    this->addItem(pixmapItem);
+    _pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*_image));
+    _pixmapItem->setTransformationMode(Qt::SmoothTransformation);
+    this->addItem(_pixmapItem);
 
-    emit imageLoaded(image->size());
+    emit imageLoaded(_image->size());
 
     QFileInfo info(filename);
     _labelFilePath = info.path() + "/" + info.completeBaseName() + ".txt";
@@ -86,29 +89,42 @@ void ViewScene::loadBoxItemsFromFile()
     file.open(QIODevice::ReadOnly | QIODevice::Text);
 
     QPoint zero(0, 0);
-    QRect fatherRect(zero, image->size());
+    QRect fatherRect(zero, _image->size());
     qreal x,y,w,h;
-    int cls;
+    int index;
 
     QTextStream in(&file);
     while (!in.atEnd()) {
         QStringList info = in.readLine().split(" ");
         if(info.size() >= 5) {
-            cls = info.at(0).toInt();
-            w = info.at(3).toFloat() * image->width();
-            h = info.at(4).toFloat() * image->height();
-            x = info.at(1).toFloat() * image->width() - w/2;
-            y = info.at(2).toFloat() * image->height() - h/2;
+            index = info.at(0).toInt();
+            w = info.at(3).toFloat() * _image->width();
+            h = info.at(4).toFloat() * _image->height();
+            x = info.at(1).toFloat() * _image->width() - w/2;
+            y = info.at(2).toFloat() * _image->height() - h/2;
 
-            BoxItem *b = new BoxItem(fatherRect, image->size(), classNameList, classNameList->at(cls));
-            b->setLabelRect(x,y,w,h);
+            BoxItem *b = new BoxItem(fatherRect, _image->size(), _typeNameList, _typeNameList.at(index));
             b->setRect(x,y,w,h);
-            connect(b, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
-
+            this->registerItem(b);
             this->addItem(b);
         }
     }
     file.close();
+}
+
+void ViewScene::registerItem(BoxItem *b)
+{
+    connect(b, SIGNAL(targetTypeChanged(QString)), this, SLOT(changeBoxTargetTypeName(QString)));
+    connect(b, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
+    connect(b, SIGNAL(stretchCompleted(QRectF)), this, SLOT(moveBox(QRectF)));
+    connect(b, SIGNAL(moveCompleted(QRectF)), this, SLOT(moveBox(QRectF)));
+}
+void ViewScene::unregisterItem(BoxItem *b)
+{
+    disconnect(b, SIGNAL(targetTypeChanged(QString)), this, SLOT(changeBoxTargetTypeName(QString)));
+    disconnect(b, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
+//    disconnect(b, SIGNAL(stretchCompleted(QPointF)), this, SLOT(stretchBox(QPointF)));
+//    disconnect(b, SIGNAL(moveCompleted(QPointF)), this, SLOT(moveBox(QPointF)));
 }
 
 void ViewScene::saveBoxItemsToFile()
@@ -121,10 +137,10 @@ void ViewScene::saveBoxItemsToFile()
     foreach (QGraphicsItem *item, this->items()) {
         if (item->type() == QGraphicsItem::UserType+1) {
             BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
-            b->labelRect(label);
+            b->rect(label);
             QString s;
             s.sprintf("%d %f %f %f %f\n",
-                      classNameList->indexOf(b->labelClassName()),
+                      _typeNameList.indexOf(b->typeName()),
                       label[0],label[1],label[2],label[3]);
             out << s;
         }
@@ -135,7 +151,7 @@ void ViewScene::saveBoxItemsToFile()
 void ViewScene::drawView()
 {
     QPoint zero(0, 0);
-    QRect rect(zero, image->size() * zoomFactor);
+    QRect rect(zero, _image->size() * _zoomFactor);
     setSceneRect(rect);
 
     if (!isImageLoaded) {
@@ -148,22 +164,27 @@ void ViewScene::drawView()
             BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
             b->setScale(this->sceneRect());
         } else if (item->type() == QGraphicsPixmapItem::Type) {
-            item->setScale(zoomFactor);
+            item->setScale(_zoomFactor);
         }
     }
 }
 
 void ViewScene::deleteBoxItems()
 {
+    QList<BoxItem *> *boxList = new QList<BoxItem *>();
     foreach (QGraphicsItem *item, this->selectedItems()) {
         if (item->type() == QGraphicsItem::UserType+1) {
-            this->removeItem(item);
-            delete item;
+//            this->removeItem(item);
+//            delete item;
+            BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
+            boxList->append(b);
         }
     }
+    _undoStack->push(new RemoveBoxesCommand(this, boxList));
+    delete boxList;
 }
 
-void ViewScene::selectAllBoxItems(bool op)
+void ViewScene::selectBoxItems(bool op)
 {
     // selecting box items
     foreach (QGraphicsItem *item, this->items()) {
@@ -172,24 +193,46 @@ void ViewScene::selectAllBoxItems(bool op)
         }
     }
 }
+void ViewScene::selectBoxItems(int index, bool op)
+{
+    foreach (QGraphicsItem *item, this->items()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            item->setSelected(false);
+        }
+    }
+    QGraphicsItem *item = this->items().at(index);
+    item->setSelected(op);
+}
+void ViewScene::selectBoxItems(QList<int> indexList, bool op)
+{
+    foreach (QGraphicsItem *item, this->items()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            item->setSelected(false);
+        }
+    }
+    for (int i=0; i<indexList.count(); i++) {
+        QGraphicsItem *item = this->items().at(i);
+        item->setSelected(op);
+    }
+}
 
 void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     switch (event->buttons()) {
     case Qt::LeftButton:
         if (event->modifiers() == Qt::ShiftModifier) { // drawing box item
-            selectAllBoxItems(false); // deselect all the other box items
-            leftTopPoint = event->scenePos();
-            isDrawing = true;
+            selectBoxItems(false); // deselect all the other box items
+            _leftTopPoint = event->scenePos();
+            _isDrawing = true;
         } else if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
             QGraphicsScene::mousePressEvent(event);
         } else { // selecting single box item
-            selectAllBoxItems(false);
+            selectBoxItems(false);
             QGraphicsScene::mousePressEvent(event);
         }
         break;
     case Qt::RightButton:
-        selectAllBoxItems(false);
+        selectBoxItems(false);
         QGraphicsScene::mousePressEvent(event);
     break;
     default:
@@ -200,19 +243,19 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton) {
-        if(isDrawing) {
+        if(_isDrawing) {
             this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
-            if(!boxItem) {
-                boxItem = new BoxItem(this->sceneRect(), image->size(), classNameList, classNameList->at(0));
-                this->addItem(boxItem);
-                boxItem->setSelected(true);
-                connect(boxItem, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
+            if(!_boxItem) {
+                _boxItem = new BoxItem(this->sceneRect(), _image->size(), _typeNameList, _typeNameList.at(0));
+                this->registerItem(_boxItem);
+                this->addItem(_boxItem);
+                _boxItem->setSelected(true);
             }
-            rightBottomPoint = event->scenePos();
-            QRect roi(qMin(rightBottomPoint.x(), leftTopPoint.x()),
-                      qMin(rightBottomPoint.y(), leftTopPoint.y()),
-                      qAbs(rightBottomPoint.x() - leftTopPoint.x()),
-                      qAbs(rightBottomPoint.y() - leftTopPoint.y()));
+            _rightBottomPoint = event->scenePos();
+            QRect roi(qMin(_rightBottomPoint.x(), _leftTopPoint.x()),
+                      qMin(_rightBottomPoint.y(), _leftTopPoint.y()),
+                      qAbs(_rightBottomPoint.x() - _leftTopPoint.x()),
+                      qAbs(_rightBottomPoint.y() - _leftTopPoint.y()));
             int l = sceneRect().left(), r = sceneRect().right(),
                     t = sceneRect().top(), b = sceneRect().bottom();
             if (roi.right() < l || roi.left() > r ||
@@ -224,7 +267,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             roi.setBottom(qMin(b, roi.bottom()));
             roi.setRight(qMin(r, roi.right()));
 
-            boxItem->setRect(roi);
+            _boxItem->setRect(roi);
         }
 
         if (_isPanning)
@@ -244,9 +287,12 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void ViewScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (isDrawing) {
-        isDrawing = false;
-        boxItem = 0;
+    if (_isDrawing) {
+        _isDrawing = false;
+        this->removeItem(_boxItem);
+        _undoStack->push(new AddBoxCommand(this, _boxItem));
+        _boxItem = 0;
+        return;
     }
     if (_isPanning) {
         _isPanning = false;
@@ -271,7 +317,7 @@ void ViewScene::keyPressEvent(QKeyEvent *keyEvent)
     if(keyEvent->key() == Qt::Key_Delete) {
         deleteBoxItems();
     } else if(keyEvent->key() == Qt::Key_A && keyEvent->modifiers() == Qt::ControlModifier) {
-        selectAllBoxItems(true);
+        selectBoxItems(true);
     } else if(keyEvent->key() == Qt::Key_Shift) {
         this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
     } else {
@@ -292,18 +338,32 @@ void ViewScene::keyReleaseEvent(QKeyEvent *keyEvent)
  */
 double ViewScene::viewZoom() const
 {
-    return zoomFactor;
+    return _zoomFactor;
 }
 
 void ViewScene::setViewZoom(double zoom)
 {
-    zoomFactor = zoom;
+    _zoomFactor = zoom;
     drawView();
 }
 
 void ViewScene::setViewZoom(int w, int h)
 {
-    QSize size = image->size();
-    zoomFactor = std::min(1.0 * w / size.width(), 1.0 * h / size.height());
+    QSize size = _image->size();
+    _zoomFactor = std::min(1.0 * w / size.width(), 1.0 * h / size.height());
     drawView();
+}
+
+void ViewScene::changeBoxTargetTypeName(QString name)
+{
+    _undoStack->push(new SetTargetTypeCommand(this, reinterpret_cast<BoxItem *>(QObject::sender()), name));
+}
+
+void ViewScene::moveBox(QRectF rect)
+{
+    BoxItem *item = reinterpret_cast<BoxItem *>(QObject::sender());
+    if (item != nullptr) {
+        _undoStack->push(new MoveBoxCommand(this, item, rect));
+        this->selectBoxItems(this->items().indexOf(item), true);
+    }
 }

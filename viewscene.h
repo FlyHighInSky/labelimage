@@ -11,6 +11,8 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QImageReader>
+#include <QUndoStack>
+#include "commands.h"
 #include "FreeImage.h"
 
 class ViewScene : public QGraphicsScene
@@ -26,17 +28,31 @@ public:
     void saveToFile(const QString& path);
     void clear();
 
-    QImage *image;
     bool isImageLoaded = false;
-    QList<QString> *classNameList = nullptr;
-    bool isDrawing = false;
-    void Undo();
-    void Redo();
+    void setTypeNameList (const QStringList &list)
+    {
+        _typeNameList = list;
+    }
+    QUndoStack *undoStack() const
+    {
+        return _undoStack;
+    }
+    void undo();
+    void redo();
+    void selectBoxItems(QList<int>indexList, bool op);
+    void selectBoxItems(int index, bool op);
+    void selectBoxItems(bool op);
+    void registerItem(BoxItem *b);
+    void unregisterItem(BoxItem *b);
+
+private slots:
+    void changeBoxTargetTypeName(QString name);
+    void moveBox(QRectF rect);
+
 signals:
     void imageLoaded(QSize imageSize);
     void cursorMoved(QPointF cursorPos);
     void boxSelected(QRect boxRect);
-
 
 protected:
     void drawView();
@@ -47,16 +63,19 @@ protected:
     void keyPressEvent(QKeyEvent *keyEvent);
     void keyReleaseEvent(QKeyEvent *keyEvent);
     void deleteBoxItems();
-    void selectAllBoxItems(bool op);
 private:
-    QGraphicsPixmapItem *pixmapItem = nullptr;
-    BoxItem* boxItem = nullptr;
-    double zoomFactor = 1;
+    QImage *_image;
+    QGraphicsPixmapItem *_pixmapItem = nullptr;
+    BoxItem* _boxItem = nullptr;
+    QStringList _typeNameList;
+    double _zoomFactor = 1;
     QPointF _dragStart, _dragEnd;
     bool _isPanning = false;
-    QPointF leftTopPoint;
-    QPointF rightBottomPoint;
+    bool _isDrawing = false;
+    QPointF _leftTopPoint;
+    QPointF _rightBottomPoint;
     QString _labelFilePath;
+    QUndoStack *_undoStack;
     void loadBoxItemsFromFile();
     void saveBoxItemsToFile();
 };

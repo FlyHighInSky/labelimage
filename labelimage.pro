@@ -5,15 +5,16 @@ HEADERS       = \
     mainwindow.h \
     viewscene.h \
     boxitem.h \
-    undohistory.h \
     FreeImage.h \
-    typeeditdialog.h
+    typeeditdialog.h \
+    commands.h
 SOURCES       = \
                 main.cpp \
     mainwindow.cpp \
     viewscene.cpp \
     boxitem.cpp \
-    typeeditdialog.cpp
+    typeeditdialog.cpp \
+    commands.cpp
 
 # install
 # target.path = $$[QT_INSTALL_EXAMPLES]/widgets/widgets/labelimage

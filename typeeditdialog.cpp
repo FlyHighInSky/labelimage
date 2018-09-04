@@ -1,7 +1,6 @@
 #include "typeeditdialog.h"
-#include <QDebug>
 
-TypeEditDialog::TypeEditDialog(QWidget *parent, QString fileName, QString languageFile):
+TypeEditDialog::TypeEditDialog(QWidget *parent, QString fileName, QTranslator *translator):
     QDialog(parent, Qt::WindowTitleHint | Qt::CustomizeWindowHint),
     _appendButton(new QPushButton(tr("Append"))),
     _deleteButton(new QPushButton(tr("Delete"))),
@@ -48,9 +47,7 @@ TypeEditDialog::TypeEditDialog(QWidget *parent, QString fileName, QString langua
 
     setLayout(_mainLayout);
 
-    _translator.load(languageFile);
-    qApp->installTranslator(&_translator);
-    qApp->removeTranslator( &_translator );
+    qApp->installTranslator(translator);
 }
 
 void TypeEditDialog::initNameListFromFile()
@@ -119,6 +116,7 @@ void TypeEditDialog::closeEvent(QCloseEvent *)
     delete _deleteButton;
     delete _editButton;
     delete _typeListWidget;
+    delete _typeNameList;
 }
 
 void TypeEditDialog::saveNameListToFile()

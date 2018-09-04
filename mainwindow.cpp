@@ -31,7 +31,7 @@ MainWindow::MainWindow()
     _languageFile = ":/languages/zh_CN.qm";
     translator.load(_languageFile);
     qApp->installTranslator( &translator );
-    this->refresh();
+    this->retranslate();
 }
 /**
  * @brief MainWindow::openDirectory
@@ -66,68 +66,29 @@ void MainWindow::openFolder()
         connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &MainWindow::onFileSelected);
         _typeFileName = srcImageDir + "/names.txt";
-        loadClassNames(_typeFileName);
+        loadTypeNameFromFile(_typeFileName);
         editAct->setEnabled(true);
-        if (_classNames->count() <= 0) {
+        if (_typeNameList.count() <= 0) {
             editTargetType();
         }
-        _viewScene->classNameList = _classNames;
+        _viewScene->setTypeNameList(_typeNameList);
         _viewScene->installEventFilter(this);
     }
 }
 
-void MainWindow::loadClassNames(QString filePath)
+void MainWindow::loadTypeNameFromFile(QString filePath)
 {
     QFile file(filePath);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
-
-    _classNames = new QStringList();
 
     QTextStream in(&file);
     while (!in.atEnd()) {
         QString s = in.readLine();
         if(!(s.simplified().isEmpty())) {
-            _classNames->append(s);
+            _typeNameList.append(s);
         }
     }
     file.close();
-}
-
-void MainWindow::copy()
-{
-#ifndef QT_NO_CLIPBOARD
-    QGuiApplication::clipboard()->setImage(image);
-#endif // !QT_NO_CLIPBOARD
-}
-
-#ifndef QT_NO_CLIPBOARD
-static QImage clipboardImage()
-{
-    if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData()) {
-        if (mimeData->hasImage()) {
-            const QImage image = qvariant_cast<QImage>(mimeData->imageData());
-            if (!image.isNull())
-                return image;
-        }
-    }
-    return QImage();
-}
-#endif // !QT_NO_CLIPBOARD
-
-void MainWindow::paste()
-{
-#ifndef QT_NO_CLIPBOARD
-    const QImage newImage = clipboardImage();
-    if (newImage.isNull()) {
-        statusBar()->showMessage(tr("No image in clipboard"));
-    } else {
-        //        setImage(newImage);
-        setWindowFilePath(QString());
-        const QString message = tr("Obtained image from clipboard, %1x%2, Depth: %3")
-                .arg(newImage.width()).arg(newImage.height()).arg(newImage.depth());
-        statusBar()->showMessage(message);
-    }
-#endif // !QT_NO_CLIPBOARD
 }
 
 void MainWindow::help()
@@ -177,8 +138,7 @@ void MainWindow::createActions()
     editToolBar = addToolBar(tr("Edit"));
 
     // edit target type
-    const QIcon editIcon = QIcon::fromTheme("document-open", QIcon(":/images/edit.png"));
-    editAct = new QAction(editIcon, tr("&Target Type"), this);
+    editAct = new QAction(QIcon(":/images/edit.png"), tr("&Target Type"), this);
     editAct->setShortcut(tr("Ctrl+T"));
     editAct->setStatusTip(tr("Edit Target Type"));
     connect(editAct, &QAction::triggered, this, &MainWindow::editTargetType);
@@ -186,19 +146,22 @@ void MainWindow::createActions()
     editToolBar->addAction(editAct);
     editAct->setEnabled(false);
 
+    _undoGroup = new QUndoGroup(this);
     // undo
-    const QIcon undoIcon = QIcon::fromTheme("document-open", QIcon(":/images/undo.png"));
-    undoAct = new QAction(undoIcon, tr("&Undo"), this);
+    undoAct = _undoGroup->createUndoAction(this);
+    undoAct->setIcon(QIcon(":/images/undo.png"));
+//    undoAct->setStatusTip(tr("Undo the draw"));
     undoAct->setShortcut(QKeySequence::Undo);
-    undoAct->setStatusTip(tr("Undo the draw"));
+//    connect(undoAct, &QAction::triggered, this, &MainWindow::onUndo);
     editMenu->addAction(undoAct);
     editToolBar->addAction(undoAct);
 
     // redo
-    const QIcon redoIcon = QIcon::fromTheme("document-open", QIcon(":/images/redo.png"));
-    redoAct = new QAction(redoIcon, tr("&Redo"), this);
+    redoAct = _undoGroup->createRedoAction(this);
+    redoAct->setIcon(QIcon(":/images/redo.png"));
+//    redoAct->setStatusTip(tr("Redo the draw"));
     redoAct->setShortcut(QKeySequence::Redo);
-    redoAct->setStatusTip(tr("Undo the draw"));
+//    connect(redoAct, &QAction::triggered, this, &MainWindow::onRedo);
     editMenu->addAction(redoAct);
     editToolBar->addAction(redoAct);
 
@@ -300,7 +263,6 @@ void MainWindow::createActions()
 
 void MainWindow::switchLanguage()
 {
-    qApp->removeTranslator( &translator );
     if (this->sender() == zhCNAct) {
         _languageFile = ":/languages/zh_CN.qm";
     } else if (this->sender() == enUSAct) {
@@ -308,10 +270,10 @@ void MainWindow::switchLanguage()
     }
     translator.load(_languageFile);
     qApp->installTranslator( &translator );
-    this->refresh();
+    this->retranslate();
 }
 
-void MainWindow::refresh()
+void MainWindow::retranslate()
 {
     // file menu
     fileMenu->setTitle(tr("&File"));
@@ -328,22 +290,21 @@ void MainWindow::refresh()
 
     // edit menu
     editMenu->setTitle(tr("&Edit"));
-    //    editToolBar->setTitle(tr("Edit"));
 
-    // draw
-    editAct ->setText(tr("&Draw"));
-    editAct->setShortcut(tr("Ctrl+D"));
-    editAct->setStatusTip(tr("Draw rectangle"));
+    // edit target type
+    editAct ->setText(tr("&Target Type"));
+    editAct->setShortcut(tr("Ctrl+T"));
+    editAct->setStatusTip(tr("Edit Target Type"));
 
     // undo
     undoAct->setText(tr("&Undo"));
-    undoAct->setShortcut(QKeySequence::Undo);
-    undoAct->setStatusTip(tr("Undo the draw"));
+//    undoAct->setShortcut(QKeySequence::Undo);
+//    undoAct->setStatusTip(tr("Undo the draw"));
 
     // redo
     redoAct->setText(tr("&Redo"));
-    redoAct->setShortcut(QKeySequence::Redo);
-    redoAct->setStatusTip(tr("Undo the draw"));
+//    redoAct->setShortcut(QKeySequence::Redo);
+//    redoAct->setStatusTip(tr("Redo the draw"));
 
     // view menu
     viewMenu->setTitle(tr("&View"));
@@ -425,6 +386,8 @@ void MainWindow::createCentralWindow()
     connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
     connect(_viewScene, SIGNAL(boxSelected(QRect)), this, SLOT(updateLabelBoxRect(QRect)));
     connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
+    _undoGroup->addStack(_viewScene->undoStack());
+    _undoGroup->setActiveStack(_viewScene->undoStack());
 
     fileListModel = new QFileSystemModel(this);
     filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
@@ -505,7 +468,7 @@ void MainWindow::editTargetType()
 {
     //    if (!isImageLoaded)
     //        return;
-    TypeEditDialog* d = new TypeEditDialog(this, _typeFileName, _languageFile);
+    TypeEditDialog* d = new TypeEditDialog(this, _typeFileName, &translator);
     int resutl = d->exec();
     if (resutl == QDialog::Accepted) {
         delete d;

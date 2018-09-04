@@ -19,7 +19,7 @@ class TypeEditDialog : public QDialog
 {
     Q_OBJECT
 public:
-    TypeEditDialog(QWidget *parent, QString fileName, QString languageFile);
+    TypeEditDialog(QWidget *parent, QString fileName, QTranslator *translator);
 private:
     QListWidget *_typeListWidget;
     QDialogButtonBox *_buttonBox;
@@ -29,7 +29,6 @@ private:
     QString _fileName;
     QStringList *_typeNameList;
     int _typeNameFileCount;
-    QTranslator _translator;
 
     void closeEvent(QCloseEvent *);
     void initNameListFromFile();

@@ -84,8 +84,6 @@ public:
 
 private slots:
     void openFolder();
-    void copy();
-    void paste();
     void zoomIn();
     void zoomOut();
     void editTargetType();
@@ -99,7 +97,6 @@ private slots:
     void updateLabelCursorPos(QPointF cursorPos);
     void updateLabelBoxRect(QRect boxRect);
     void switchLanguage();
-
 private:
     void wheelEvent(QWheelEvent *event);
     void resizeEvent(QResizeEvent* event);
@@ -110,9 +107,9 @@ private:
     void scaleImage(double factor);
     void closeEvent(QCloseEvent *event);
     bool eventFilter(QObject *obj, QEvent *event);
-    void refresh();
+    void retranslate();
 
-    void loadClassNames(QString filePath);
+    void loadTypeNameFromFile(QString filePath);
     QWidget *centralWidget;
     QAction *fitToWindowAct;
     QImage image;
@@ -123,7 +120,7 @@ private:
     ViewScene *_viewScene = nullptr;
     QFileSystemModel *fileListModel;
     QStringList filters;
-    QStringList*_classNames = nullptr;
+    QStringList _typeNameList;
     QString _languageFile;
     QString _typeFileName;
     bool isImageLoaded =  false;
@@ -147,6 +144,7 @@ private:
     QAction *editAct;
     QAction *undoAct;
     QAction *redoAct;
+    QUndoGroup *_undoGroup;
     QMenu *viewMenu;
     QToolBar *viewToolBar;
     QAction *zoomInAct;

@@ -38,28 +38,31 @@ class BoxItem : public QObject, public QGraphicsItem
 {
     Q_OBJECT
 public:
-    BoxItem(QRectF fatherRect, QSize imageSize, QList<QString> *classNameList, QString labelClassName);
+    BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameList, QString targetTypeName);
+    BoxItem* BoxItem::duplicate();
 
+    void setTypeName(QString name);
+    QString typeName() const
+    {
+        return _typeName;
+    }
     void setScale(QRectF fatherRect);
     void setRect(const QRectF &rect);
-    void setRect(const qreal x, qreal y, qreal w, qreal h);
-    void setLabelClassName(QString name);
-    QString labelClassName() const
+    void setRect(const qreal x, const qreal y, const qreal w, const qreal h);
+    void rect(qreal *info) const
     {
-        return _labelClassName;
-    }
-    void setLabelRect(QRectF rect);
-    void labelRect(qreal *info) const
-    {
-        qreal ws = 1.0 / _fatherRect.width();
-        qreal hs = 1.0 / _fatherRect.height();
+        qreal ws = 1.0 / _sceneRect.width();
+        qreal hs = 1.0 / _sceneRect.height();
 
-        info[0] = _box.center().x()*ws;
-        info[1] = _box.center().y()*hs;
-        info[2] = _box.width()*ws;
-        info[3] = _box.height()*hs;
+        info[0] = _rect.center().x()*ws;
+        info[1] = _rect.center().y()*hs;
+        info[2] = _rect.width()*ws;
+        info[3] = _rect.height()*hs;
     }
-    void setLabelRect(qreal x, qreal y, qreal w, qreal h);
+    QRectF rect() const
+    {
+        return _rect;
+    }
 
     enum { Type = UserType + 1 };
     int type() const
@@ -68,8 +71,19 @@ public:
         return Type;
     }
 
+    GrabberID _selectedGrabber;
+    QPointF _dragStart, _dragEnd, _dragOffset;
+    QRectF _originalRect;
+    void moveBox(QPointF dragStart, QPointF dragEnd);
+    QRectF calculateMoveRect(QPointF dragStart, QPointF dragEnd);
+    QRectF calculateStretchRect(QPointF dragStart, QPointF dragEnd);
+    void stretchBox(QPointF pos);
+
 signals:
     void boxSelected(QRect boxRect);
+    void targetTypeChanged(QString newTypeName);
+    void stretchCompleted(QRectF rect);
+    void moveCompleted(QRectF rect);
 
 private:
 
@@ -88,30 +102,24 @@ private:
     virtual void mousePressEvent(QGraphicsSceneDragDropEvent *event);
 
     void setGrabbers();
-    void moveBox(QPointF pos);
-    void stretchBox(QPointF pos);
-
     void initContextMenu();
     GrabberID getSelectedGrabber(QPointF point);
     void setGrabberCursor(GrabberID stretchRectState);
-    GrabberID _selectedGrabber;
     TaskStatus _taskStatus = Waiting;
+    bool _isMouseMoved = false;
 
     int _imageWidth, _imageHeight;
-    QRectF _fatherRect;
-    QRectF _box;
+    QRectF _sceneRect;
+    QRectF _rect;
     QGraphicsTextItem _textRect, _textName;
     QRectF _drawingRegion;
     QRectF _boundingRect;
-    QString _labelClassName;
-    QList<QString> *_classNameList;
-    QRectF _labelRect;
+    QStringList _typeNameList;
+    QString _typeName;
 
     QMenu _contextMenu;
     QColor _color;
     QPen _pen;
-    QRectF _oldBox;
-    QPointF _dragStart;
 
     int _grabberWidth;
     int _grabberHeight;
