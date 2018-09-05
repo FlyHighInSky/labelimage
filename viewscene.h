@@ -52,7 +52,7 @@ public:
     void unregisterItem(BoxItem *b);
 
 private slots:
-    void changeBoxTargetTypeName(QString name);
+    void changeTargetTypeName(QString name);
     void moveBox(QRectF rect);
 
 signals:

@@ -437,19 +437,20 @@ void MainWindow::displayImageView(QString imageFilePath)
     }
     _viewScene = new ViewScene(this);
     _viewScene->setTypeNameList(_typeNameList);
-    _viewScene->loadImage(imageFilePath);
 
     _viewScene->installEventFilter(this);
     connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
     connect(_viewScene, SIGNAL(boxSelected(QRect)), this, SLOT(updateLabelBoxRect(QRect)));
     connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
 
+    _viewScene->loadImage(imageFilePath);
+    isImageLoaded = true;
+
     _undoGroup->addStack(_viewScene->undoStack());
     _undoGroup->setActiveStack(_viewScene ? _viewScene->undoStack() : 0);
 
     imageView->setScene(_viewScene);
 
-    isImageLoaded = true;
     fitToWindowAct->setChecked(true);
     fitViewToWindow();
 }

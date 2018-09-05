@@ -123,14 +123,14 @@ void ViewScene::loadBoxItemsFromFile()
 
 void ViewScene::registerItem(BoxItem *b)
 {
-    connect(b, SIGNAL(targetTypeChanged(QString)), this, SLOT(changeBoxTargetTypeName(QString)));
+    connect(b, SIGNAL(targetTypeChanged(QString)), this, SLOT(changeTargetTypeName(QString)));
     connect(b, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
     connect(b, SIGNAL(stretchCompleted(QRectF)), this, SLOT(moveBox(QRectF)));
     connect(b, SIGNAL(moveCompleted(QRectF)), this, SLOT(moveBox(QRectF)));
 }
 void ViewScene::unregisterItem(BoxItem *b)
 {
-    disconnect(b, SIGNAL(targetTypeChanged(QString)), this, SLOT(changeBoxTargetTypeName(QString)));
+    disconnect(b, SIGNAL(targetTypeChanged(QString)), this, SLOT(changeTargetTypeName(QString)));
     disconnect(b, SIGNAL(boxSelected(QRect)), this, SIGNAL(boxSelected(QRect)));
 //    disconnect(b, SIGNAL(stretchCompleted(QPointF)), this, SLOT(stretchBox(QPointF)));
 //    disconnect(b, SIGNAL(moveCompleted(QPointF)), this, SLOT(moveBox(QPointF)));
@@ -361,7 +361,7 @@ void ViewScene::setViewZoom(int w, int h)
     drawView();
 }
 
-void ViewScene::changeBoxTargetTypeName(QString name)
+void ViewScene::changeTargetTypeName(QString name)
 {
     _undoStack->push(new SetTargetTypeCommand(this, reinterpret_cast<BoxItem *>(QObject::sender()), name));
 }

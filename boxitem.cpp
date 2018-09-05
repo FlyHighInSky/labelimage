@@ -67,7 +67,6 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
             emit moveCompleted(rect);
             break;
         case Stretching:
-//            stretchBox(event->pos());
             this->setCursor(Qt::ArrowCursor);
             _dragEnd = event->pos();
             rect = calculateStretchRect(_dragStart, _dragEnd);
