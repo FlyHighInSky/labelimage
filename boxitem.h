@@ -39,7 +39,10 @@ class BoxItem : public QObject, public QGraphicsItem
     Q_OBJECT
 public:
     BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameList, QString targetTypeName);
-    BoxItem* BoxItem::duplicate();
+    ~BoxItem()
+    {
+       ;
+    }
 
     void setTypeName(QString name);
     QString typeName() const
@@ -72,12 +75,9 @@ public:
     }
 
     GrabberID _selectedGrabber;
-    QPointF _dragStart, _dragEnd, _dragOffset;
+    QPointF _dragStart, _dragEnd;
     QRectF _originalRect;
     void moveBox(QPointF dragStart, QPointF dragEnd);
-    QRectF calculateMoveRect(QPointF dragStart, QPointF dragEnd);
-    QRectF calculateStretchRect(QPointF dragStart, QPointF dragEnd);
-    void stretchBox(QPointF pos);
 
 signals:
     void boxSelected(QRect boxRect);
@@ -105,6 +105,9 @@ private:
     void initContextMenu();
     GrabberID getSelectedGrabber(QPointF point);
     void setGrabberCursor(GrabberID stretchRectState);
+    QRectF calculateMoveRect(QPointF dragStart, QPointF dragEnd);
+    QRectF calculateStretchRect(QPointF dragStart, QPointF dragEnd);
+
     TaskStatus _taskStatus = Waiting;
     bool _isMouseMoved = false;
 

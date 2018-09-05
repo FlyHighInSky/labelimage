@@ -22,14 +22,23 @@ void ViewScene::clear()
         delete _image;
         _image = nullptr;
     }
+    if (_pixmapItem != nullptr) {
+        delete _pixmapItem;
+        _pixmapItem = nullptr;
+    }
 
     foreach (QGraphicsItem *item, this->items()) {
         if ((item->type() == QGraphicsItem::UserType+1) ||
             (item->type() == QGraphicsPixmapItem::Type) ) {
             this->removeItem(item);
-//            this->unregisterItem(qgraphicsitem_cast<BoxItem *>(item));
             delete item;
         }
+    }
+
+    if (_undoStack != nullptr) {
+        _undoStack->clear();
+        delete _undoStack;
+        _undoStack = nullptr;
     }
 }
 
@@ -193,26 +202,24 @@ void ViewScene::selectBoxItems(bool op)
         }
     }
 }
-void ViewScene::selectBoxItems(int index, bool op)
+
+void ViewScene::selectBoxItems(BoxItem *box, bool op)
 {
     foreach (QGraphicsItem *item, this->items()) {
         if (item->type() == QGraphicsItem::UserType+1) {
-            item->setSelected(false);
+            item->setSelected(item==qgraphicsitem_cast<QGraphicsItem *>(box));
         }
     }
-    QGraphicsItem *item = this->items().at(index);
-    item->setSelected(op);
+//    QGraphicsItem *item = this->items().at(index);
+//    item->setSelected(op);
 }
-void ViewScene::selectBoxItems(QList<int> indexList, bool op)
+
+void ViewScene::selectBoxItems(QList<BoxItem *> *boxList, bool op)
 {
     foreach (QGraphicsItem *item, this->items()) {
         if (item->type() == QGraphicsItem::UserType+1) {
-            item->setSelected(false);
+            item->setSelected(boxList->contains(qgraphicsitem_cast<BoxItem *>(item)));
         }
-    }
-    for (int i=0; i<indexList.count(); i++) {
-        QGraphicsItem *item = this->items().at(i);
-        item->setSelected(op);
     }
 }
 
@@ -364,6 +371,5 @@ void ViewScene::moveBox(QRectF rect)
     BoxItem *item = reinterpret_cast<BoxItem *>(QObject::sender());
     if (item != nullptr) {
         _undoStack->push(new MoveBoxCommand(this, item, rect));
-        this->selectBoxItems(this->items().indexOf(item), true);
     }
 }

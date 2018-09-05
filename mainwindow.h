@@ -64,6 +64,7 @@
 #endif
 #include "viewscene.h"
 #include <QMessageBox>
+#include <QUndoGroup>
 #include "typeeditdialog.h"
 
 QT_BEGIN_NAMESPACE
@@ -112,7 +113,6 @@ private:
     void loadTypeNameFromFile(QString filePath);
     QWidget *centralWidget;
     QAction *fitToWindowAct;
-    QImage image;
     QHBoxLayout *horizontalLayout;
     QSplitter *mainSplitter;
     QTreeView *fileListView;
@@ -131,7 +131,6 @@ private:
     QSize _imageSize;
     QRect _boxRect;
 
-    QAction *copyAct;
     QTranslator translator;
 
     QAction *zhCNAct, *enUSAct;

@@ -71,8 +71,6 @@ void MainWindow::openFolder()
         if (_typeNameList.count() <= 0) {
             editTargetType();
         }
-        _viewScene->setTypeNameList(_typeNameList);
-        _viewScene->installEventFilter(this);
     }
 }
 
@@ -381,13 +379,6 @@ void MainWindow::createCentralWindow()
     fileListView = new QTreeView(this);
     imageView = new QGraphicsView(this);
     imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    _viewScene = new ViewScene(this);
-
-    connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
-    connect(_viewScene, SIGNAL(boxSelected(QRect)), this, SLOT(updateLabelBoxRect(QRect)));
-    connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
-    _undoGroup->addStack(_viewScene->undoStack());
-    _undoGroup->setActiveStack(_viewScene->undoStack());
 
     fileListModel = new QFileSystemModel(this);
     filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
@@ -414,27 +405,36 @@ void MainWindow::createCentralWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (_viewScene->isImageLoaded) {
-        _viewScene->clear();
+    if (_viewScene) {
+        delete _viewScene;
     }
 }
 
 void MainWindow::updateActions()
 {
-    copyAct->setEnabled(!image.isNull());
     zoomInAct->setEnabled(!fitToWindowAct->isChecked());
     zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
 }
 
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    if (_viewScene->isImageLoaded) {
-        _viewScene->clear();
+    if (_viewScene) {
+        delete _viewScene;
     }
-    auto index = selected.indexes().first();
-    _viewScene->loadImage(fileListModel->filePath(index));
+    _viewScene = new ViewScene(this);
+    _viewScene->setTypeNameList(_typeNameList);
+    _viewScene->loadImage(fileListModel->filePath(selected.indexes().first()));
+
+    _viewScene->installEventFilter(this);
+    connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
+    connect(_viewScene, SIGNAL(boxSelected(QRect)), this, SLOT(updateLabelBoxRect(QRect)));
+    connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
+
+    _undoGroup->addStack(_viewScene->undoStack());
+    _undoGroup->setActiveStack(_viewScene ? _viewScene->undoStack() : 0);
 
     imageView->setScene(_viewScene);
+
     isImageLoaded = true;
     fitToWindowAct->setChecked(true);
     fitViewToWindow();

@@ -34,7 +34,6 @@ RemoveBoxesCommand::RemoveBoxesCommand(QGraphicsScene *scene, QList<BoxItem *> *
     _boxList = new QList<BoxItem *>();
     for (int i=0; i<boxList->count(); i++) {
         BoxItem *box = boxList->at(i);
-        reinterpret_cast<ViewScene *>(_scene)->registerItem(box);
         _boxList->append(box);
     }
 }
@@ -44,16 +43,15 @@ void RemoveBoxesCommand::undo()
     for (int i=0; i<_boxList->count(); i++) {
         BoxItem *item = _boxList->at(i);
         _scene->addItem(item);
-        item->setSelected(true);
     }
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_boxList, true);
 }
 
 void RemoveBoxesCommand::redo()
 {
-    foreach (QGraphicsItem *item, _scene->selectedItems()) {
-        if (item->type() == QGraphicsItem::UserType+1) {
-            _scene->removeItem(item);
-        }
+    for (int i=0; i<_boxList->count(); i++) {
+        BoxItem *item = _boxList->at(i);
+        _scene->removeItem(item);
     }
 }
 
@@ -67,21 +65,19 @@ SetTargetTypeCommand::SetTargetTypeCommand(QGraphicsScene *scene, BoxItem *box, 
 {
     _scene = scene;
     _box = box;
-    reinterpret_cast<ViewScene *>(_scene)->registerItem(_box);
     _oldName = _box->typeName();
     _newName = typeName;
-    _index = _scene->items().indexOf(box);
 }
 
 void SetTargetTypeCommand::undo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_index, true);
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
     _box->setTypeName(_oldName);
 }
 
 void SetTargetTypeCommand::redo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_index, true);
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
     _box->setTypeName(_newName);
 }
 
@@ -97,17 +93,16 @@ MoveBoxCommand::MoveBoxCommand(QGraphicsScene *scene, BoxItem *box,const QRectF 
     _box = box;
     _oldRect = box->_originalRect;
     _newRect = rect;
-    _index = _scene->items().indexOf(box);
 }
 
 void MoveBoxCommand::undo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_index, true);
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
     _box->setRect(_oldRect);
 }
 
 void MoveBoxCommand::redo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_index, true);
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
     _box->setRect(_newRect);
 }

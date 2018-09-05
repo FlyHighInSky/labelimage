@@ -20,6 +20,12 @@ class ViewScene : public QGraphicsScene
     Q_OBJECT
 public:
     ViewScene(QObject* parent = 0);
+    ~ViewScene()
+    {
+        if (isImageLoaded) {
+            this->clear();
+        }
+    }
 
     void loadImage(QString path);
     double viewZoom() const;
@@ -39,8 +45,8 @@ public:
     }
     void undo();
     void redo();
-    void selectBoxItems(QList<int>indexList, bool op);
-    void selectBoxItems(int index, bool op);
+    void selectBoxItems(QList<BoxItem *> *boxList, bool op);
+    void selectBoxItems(BoxItem *box, bool op);
     void selectBoxItems(bool op);
     void registerItem(BoxItem *b);
     void unregisterItem(BoxItem *b);

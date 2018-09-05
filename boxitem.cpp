@@ -12,7 +12,6 @@ BoxItem::BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameL
     _pen(),
     _dragStart(0,0),
     _dragEnd(0,0),
-    _dragOffset(0,0),
     _sceneRect(sceneRect),
     _grabberWidth(20),
     _grabberHeight(20),
@@ -224,60 +223,6 @@ void BoxItem::moveBox(QPointF dragStart, QPointF dragEnd)
     }
 
     this->setRect(x, y, _rect.width(), _rect.height());
-}
-
-void BoxItem::stretchBox(QPointF pos)
-{
-    qreal dx = pos.x() - _dragStart.x();
-    qreal dy = pos.y() - _dragStart.y();
-
-    qreal left = _originalRect.left(), top = _originalRect.top();
-    qreal right = _originalRect.right(), bottom = _originalRect.bottom();
-    qreal newLeft=left, newTop=top, newRight=right, newBottom=bottom;
-
-    switch(_selectedGrabber) {
-    case TopLeft:
-        newLeft = qMin(left+dx, right);
-        newTop = qMin(top+dy, bottom);
-        newRight = qMax(left+dx, right);
-        newBottom = qMax(top+dy, bottom);
-        break;
-    case TopCenter:
-        newTop = qMin(top+dy, bottom);
-        newBottom = qMax(top+dy, bottom);
-        break;
-    case TopRight:
-        newLeft = qMin(left, right+dx);
-        newRight = qMax(left, right+dx);
-        newTop = qMin(top+dy, bottom);
-        newBottom = qMax(top+dy, bottom);
-        break;
-    case RightCenter:
-        newLeft = qMin(left, right+dx);
-        newRight = qMax(left, right+dx);
-        break;
-    case BottomRight:
-        newLeft = qMin(left, right+dx);
-        newRight = qMax(left, right+dx);
-        newTop = qMin(top, bottom+dy);
-        newBottom = qMax(top, bottom+dy);
-        break;
-    case BottomCenter:
-        newTop = qMin(top, bottom+dy);
-        newBottom = qMax(top, bottom+dy);
-        break;
-    case BottomLeft:
-        newLeft = qMin(left+dx, right);
-        newRight = qMax(left+dx, right);
-        newTop = qMin(top, bottom+dy);
-        newBottom = qMax(top, bottom+dy);
-        break;
-    case LeftCenter:
-        newLeft = qMin(left+dx, right);
-        newRight = qMax(left+dx, right);
-        break;
-    }
-    this->setRect(newLeft, newTop, newRight-newLeft, newBottom-newTop);
 }
 
 void BoxItem::setRect(const qreal x, qreal y, qreal w, qreal h)

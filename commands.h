@@ -22,12 +22,18 @@ class RemoveBoxesCommand : public QUndoCommand
 {
 public:
     RemoveBoxesCommand(QGraphicsScene *scene, QList<BoxItem *> *boxList, QUndoCommand *parent = 0);
+    ~RemoveBoxesCommand()
+    {
+        if (_boxList) {
+            delete _boxList;
+        }
+    }
     void undo() override;
     void redo() override;
 
 private:
     QGraphicsScene *_scene;
-    QList<BoxItem *> *_boxList;
+    QList<BoxItem *> *_boxList = nullptr;
 };
 
 class SetTargetTypeCommand : public QUndoCommand
@@ -43,7 +49,6 @@ private:
     QGraphicsScene *_scene;
     QString _oldName, _newName;
     BoxItem *_box;
-    int _index;
 };
 
 class MoveBoxCommand : public QUndoCommand
@@ -59,7 +64,6 @@ private:
     BoxItem *_box;
     QRectF _oldRect;
     QRectF _newRect;
-    int _index;
 };
 
 #endif // COMMANDS_H
