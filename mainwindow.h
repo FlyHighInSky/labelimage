@@ -73,6 +73,7 @@ class QLabel;
 class QMenu;
 class QScrollArea;
 class QScrollBar;
+class QDirModel;
 QT_END_NAMESPACE
 
 //! [0]
@@ -94,6 +95,7 @@ private slots:
     void help();
     void about();
     void onFileSelected(const QItemSelection& selected, const QItemSelection& deselected);
+//    void onFileSelected(const QModelIndex& selected);//, const QModelIndex& deselected);
     void updateLabelImageSize(QSize imageSize);
     void updateLabelCursorPos(QPointF cursorPos);
     void updateLabelBoxRect(QRect boxRect);
@@ -109,8 +111,9 @@ private:
     void closeEvent(QCloseEvent *event);
     bool eventFilter(QObject *obj, QEvent *event);
     void retranslate();
+    QStringList loadTypeNameFromFile(QString filePath);
+    void displayImageView(QString imageFilePath);
 
-    void loadTypeNameFromFile(QString filePath);
     QWidget *centralWidget;
     QAction *fitToWindowAct;
     QHBoxLayout *horizontalLayout;
@@ -118,11 +121,13 @@ private:
     QTreeView *fileListView;
     QGraphicsView *imageView;
     ViewScene *_viewScene = nullptr;
-    QFileSystemModel *fileListModel;
+//    QFileSystemModel *fileListModel = nullptr;
+    QDirModel *fileListModel = nullptr;
+//    QStringList filters;
     QStringList filters;
+    QString _typeNameFile;
     QStringList _typeNameList;
     QString _languageFile;
-    QString _typeFileName;
     bool isImageLoaded =  false;
     QScrollArea *scrollArea;
     double scaleFactor;

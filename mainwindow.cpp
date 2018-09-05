@@ -45,37 +45,46 @@ void MainWindow::openFolder()
                                                             | QFileDialog::DontResolveSymlinks);
     if (!srcImageDir.isEmpty()) {
         setWindowTitle(srcImageDir);
-        fileListModel->setFilter(QDir::Files | QDir::NoDotAndDotDot);
-        fileListModel->setNameFilters(filters);
-        fileListModel->setNameFilterDisables(0);
-        fileListModel->setRootPath(srcImageDir);
 
-        fileListView->setFocus();
+        if (fileListModel){
+            delete fileListModel;
+            fileListModel = nullptr;
+            editAct->setEnabled(false);
+        }
+
+        // init dirmodel
+        filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
+        fileListModel = new QDirModel(filters, QDir::Files | QDir::NoDotAndDotDot, QDir::Name, this);
+
+        // init treeview and set model
+//        fileListView->setFocus();
         fileListView->setRootIsDecorated(0);
         fileListView->setModel(fileListModel);
         fileListView->setRootIndex(fileListModel->index(srcImageDir));
-
-        //        fileListView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        //        fileListView->setCurrentIndex(fileListModel->index(0,0, fileListView->rootIndex()));
-        //        QItemSelectionModel s;
-        //        s.setCurrentIndex();
-        //        QModelIndex idx = fileListModel->index(srcImageDir);
-        QModelIndex m = fileListView->model()->index(1,0,fileListView->rootIndex());
-        fileListView->selectionModel()->setCurrentIndex(m, QItemSelectionModel::Rows | QItemSelectionModel::Select);
+        fileListView->setSelectionMode(QAbstractItemView::SingleSelection);
 
         connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &MainWindow::onFileSelected);
-        _typeFileName = srcImageDir + "/names.txt";
-        loadTypeNameFromFile(_typeFileName);
+
+        // load typenamefile and init typename list.
+        _typeNameList.clear();
+        _typeNameFile= srcImageDir + "/names.txt";
+        _typeNameList = loadTypeNameFromFile(_typeNameFile);
         editAct->setEnabled(true);
         if (_typeNameList.count() <= 0) {
             editTargetType();
+            _typeNameList = loadTypeNameFromFile(_typeNameFile);
         }
+
+        // set the first image selected.
+        QModelIndex index = fileListModel->index(0, 0, fileListView->rootIndex());
+        fileListView->setCurrentIndex(index);
     }
 }
 
-void MainWindow::loadTypeNameFromFile(QString filePath)
+QStringList MainWindow::loadTypeNameFromFile(QString filePath)
 {
+    QStringList typeNameList;
     QFile file(filePath);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
 
@@ -83,10 +92,12 @@ void MainWindow::loadTypeNameFromFile(QString filePath)
     while (!in.atEnd()) {
         QString s = in.readLine();
         if(!(s.simplified().isEmpty())) {
-            _typeNameList.append(s);
+            typeNameList.append(s);
         }
     }
     file.close();
+
+    return typeNameList;
 }
 
 void MainWindow::help()
@@ -380,8 +391,6 @@ void MainWindow::createCentralWindow()
     imageView = new QGraphicsView(this);
     imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
-    fileListModel = new QFileSystemModel(this);
-    filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
 
     mainSplitter = new QSplitter(Qt::Horizontal, centralWidget);
     mainSplitter->addWidget(fileListView);
@@ -418,12 +427,17 @@ void MainWindow::updateActions()
 
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
+    displayImageView(fileListModel->filePath(selected.indexes().first()));
+}
+
+void MainWindow::displayImageView(QString imageFilePath)
+{
     if (_viewScene) {
         delete _viewScene;
     }
     _viewScene = new ViewScene(this);
     _viewScene->setTypeNameList(_typeNameList);
-    _viewScene->loadImage(fileListModel->filePath(selected.indexes().first()));
+    _viewScene->loadImage(imageFilePath);
 
     _viewScene->installEventFilter(this);
     connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
@@ -466,14 +480,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::editTargetType()
 {
-    //    if (!isImageLoaded)
-    //        return;
-    TypeEditDialog* d = new TypeEditDialog(this, _typeFileName, &translator);
+    TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &translator);
     int resutl = d->exec();
     if (resutl == QDialog::Accepted) {
         delete d;
     }
-    //    _viewScene->isDrawing = true;
 }
 
 void MainWindow::zoomIn()
@@ -505,19 +516,6 @@ void MainWindow::wheelEvent(QWheelEvent *event)
 
     if (fitToWindowAct->isChecked())
         fitToWindowAct->setChecked(false);
-
-    //    int numDegrees = event->delta() / 8;
-    //    int numSteps = numDegrees / 15; // see QWheelEvent documentation
-    //    _numScheduledScalings += numSteps;
-    //    if (_numScheduledScalings * numSteps < 0) // if user moved the wheel in another direction, we reset previously scheduled scalings
-    //    _numScheduledScalings = numSteps;
-
-    //    QTimeLine *anim = new QTimeLine(350, this);
-    //    anim->setUpdateInterval(20);
-
-    //    connect(anim, SIGNAL (valueChanged(qreal)), SLOT (scalingTime(qreal)));
-    //    connect(anim, SIGNAL (finished()), SLOT (animFinished()));
-    //    anim->start();
 
     auto oldZoom = _viewScene->viewZoom();
     auto newZoom = oldZoom + (event->delta() / 120.0) * 0.05;
