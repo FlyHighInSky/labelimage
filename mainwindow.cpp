@@ -159,18 +159,18 @@ void MainWindow::createActions()
     // undo
     undoAct = _undoGroup->createUndoAction(this);
     undoAct->setIcon(QIcon(":/images/undo.png"));
-//    undoAct->setStatusTip(tr("Undo the draw"));
+    undoAct->setText(tr("&Undo"));
+    undoAct->setStatusTip(tr("Undo"));
     undoAct->setShortcut(QKeySequence::Undo);
-//    connect(undoAct, &QAction::triggered, this, &MainWindow::onUndo);
     editMenu->addAction(undoAct);
     editToolBar->addAction(undoAct);
 
     // redo
     redoAct = _undoGroup->createRedoAction(this);
     redoAct->setIcon(QIcon(":/images/redo.png"));
-//    redoAct->setStatusTip(tr("Redo the draw"));
+    redoAct->setText(tr("&Redo"));
+    redoAct->setStatusTip(tr("Redo"));
     redoAct->setShortcut(QKeySequence::Redo);
-//    connect(redoAct, &QAction::triggered, this, &MainWindow::onRedo);
     editMenu->addAction(redoAct);
     editToolBar->addAction(redoAct);
 
@@ -307,13 +307,11 @@ void MainWindow::retranslate()
 
     // undo
     undoAct->setText(tr("&Undo"));
-//    undoAct->setShortcut(QKeySequence::Undo);
-//    undoAct->setStatusTip(tr("Undo the draw"));
+    undoAct->setStatusTip(tr("Undo"));
 
     // redo
     redoAct->setText(tr("&Redo"));
-//    redoAct->setShortcut(QKeySequence::Redo);
-//    redoAct->setStatusTip(tr("Redo the draw"));
+    redoAct->setStatusTip(tr("Redo"));
 
     // view menu
     viewMenu->setTitle(tr("&View"));
