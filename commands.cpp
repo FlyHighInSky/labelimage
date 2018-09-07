@@ -85,14 +85,14 @@ void SetTargetTypeCommand::redo()
 ** MoveBoxCommand
 */
 
-MoveBoxCommand::MoveBoxCommand(QGraphicsScene *scene, BoxItem *box,const QRectF &rect,
+MoveBoxCommand::MoveBoxCommand(QGraphicsScene *scene, BoxItem *box, const QRectF &newRect, const QRectF &oldRect,
                                              QUndoCommand *parent)
     : QUndoCommand(parent)
 {
     _scene = scene;
     _box = box;
-    _oldRect = box->_originalRect;
-    _newRect = rect;
+    _oldRect = oldRect;
+    _newRect = newRect;
 }
 
 void MoveBoxCommand::undo()

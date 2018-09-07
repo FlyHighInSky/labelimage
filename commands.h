@@ -54,7 +54,7 @@ private:
 class MoveBoxCommand : public QUndoCommand
 {
 public:
-    MoveBoxCommand(QGraphicsScene *scene, BoxItem *box, const QRectF &rect,
+    MoveBoxCommand(QGraphicsScene *scene, BoxItem *box, const QRectF &newRect, const QRectF &oldRect,
                                              QUndoCommand *parent=0);
 
     void undo() override;

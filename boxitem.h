@@ -74,16 +74,11 @@ public:
         return Type;
     }
 
-    GrabberID _selectedGrabber;
-    QPointF _dragStart, _dragEnd;
-    QRectF _originalRect;
-    void moveBox(QPointF dragStart, QPointF dragEnd);
-
 signals:
-    void boxSelected(QRect boxRect);
-    void targetTypeChanged(QString newTypeName);
-    void stretchCompleted(QRectF rect);
-    void moveCompleted(QRectF rect);
+    void boxSelected(QRect boxRect, QString typeName);
+    void typeNameChanged(QString newTypeName);
+    void stretchCompleted(QRectF newRect, QRectF oleRect);
+    void moveCompleted(QRectF newRect, QRectF oleRect);
 
 private:
 
@@ -107,15 +102,16 @@ private:
     void setGrabberCursor(GrabberID stretchRectState);
     QRectF calculateMoveRect(QPointF dragStart, QPointF dragEnd);
     QRectF calculateStretchRect(QPointF dragStart, QPointF dragEnd);
+    QRect getRealRect();
 
     TaskStatus _taskStatus = Waiting;
     bool _isMouseMoved = false;
 
-    int _imageWidth, _imageHeight;
+    QSize _imageSize;
     QRectF _sceneRect;
     QRectF _rect;
+    QRectF _oldRect;
     QGraphicsTextItem _textRect, _textName;
-    QRectF _drawingRegion;
     QRectF _boundingRect;
     QStringList _typeNameList;
     QString _typeName;
@@ -128,6 +124,8 @@ private:
     int _grabberHeight;
 
     QRectF _grabbers[8];
+    GrabberID _selectedGrabber;
+    QPointF _dragStart, _dragEnd;
 
 };
 

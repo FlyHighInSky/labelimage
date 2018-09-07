@@ -98,7 +98,7 @@ private slots:
 //    void onFileSelected(const QModelIndex& selected);//, const QModelIndex& deselected);
     void updateLabelImageSize(QSize imageSize);
     void updateLabelCursorPos(QPointF cursorPos);
-    void updateLabelBoxRect(QRect boxRect);
+    void updateBoxInfo(QRect rect, QString typeName);
     void switchLanguage();
 private:
     void wheelEvent(QWheelEvent *event);
@@ -131,10 +131,11 @@ private:
     bool isImageLoaded =  false;
     QScrollArea *scrollArea;
     double scaleFactor;
-    QLabel *_labelCursorPos, *_labelImageSize, *_labelBoxRect;
+    QLabel *_labelCursorPos, *_labelImageSize, *_labelBoxInfo;
     QPointF _cursorPos;
     QSize _imageSize;
     QRect _boxRect;
+    QString _boxTypeName;
 
     QTranslator translator;
 

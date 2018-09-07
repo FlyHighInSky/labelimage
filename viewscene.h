@@ -49,16 +49,15 @@ public:
     void selectBoxItems(BoxItem *box, bool op);
     void selectBoxItems(bool op);
     void registerItem(BoxItem *b);
-    void unregisterItem(BoxItem *b);
 
 private slots:
-    void changeTargetTypeName(QString name);
-    void moveBox(QRectF rect);
+    void changeBoxTypeName(QString name);
+    void moveBox(QRectF newRect, QRectF oldRect);
 
 signals:
     void imageLoaded(QSize imageSize);
     void cursorMoved(QPointF cursorPos);
-    void boxSelected(QRect boxRect);
+    void boxSelected(QRect boxRect, QString typeName);
 
 protected:
     void drawView();

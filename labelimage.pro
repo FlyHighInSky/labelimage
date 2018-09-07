@@ -1,5 +1,5 @@
 QT += widgets
-
+VERSION = 1.1.0
 
 HEADERS       = \
     mainwindow.h \

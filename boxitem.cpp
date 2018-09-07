@@ -9,15 +9,12 @@ BoxItem::BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameL
     _textName(),
     _typeName(targetTypeName),
     _color(Qt::red),
-    _pen(),
     _dragStart(0,0),
     _dragEnd(0,0),
     _sceneRect(sceneRect),
-    _grabberWidth(20),
-    _grabberHeight(20),
-    _drawingRegion(),
-    _imageWidth(imageSize.width()),
-    _imageHeight(imageSize.height())
+    _grabberWidth(12),
+    _grabberHeight(12),
+    _imageSize(imageSize)
 {
     _textRect.setDefaultTextColor(QColor(255,255,255,255));
     _textRect.setParentItem(this);
@@ -44,7 +41,9 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
         } else if (_rect.contains(event->pos())) { // box is selected
             _taskStatus = Moving;
         }
-        this->setSelected(!this->isSelected());
+        this->setSelected(true);
+        // emit the selected box real rect to scene and statusbar.
+        emit boxSelected(getRealRect(), _typeName);
         break;
     case Qt::RightButton:
         this->setSelected(true);
@@ -52,7 +51,7 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
     default:
         break;
     }
-    _originalRect = _rect;
+    _oldRect = _rect;
 }
 
 void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
@@ -64,13 +63,13 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
         case Moving:
             _dragEnd = event->pos();
             rect = calculateMoveRect(_dragStart, _dragEnd);
-            emit moveCompleted(rect);
+            emit moveCompleted(rect, _oldRect);
             break;
         case Stretching:
             this->setCursor(Qt::ArrowCursor);
             _dragEnd = event->pos();
             rect = calculateStretchRect(_dragStart, _dragEnd);
-            emit stretchCompleted(rect);
+            emit stretchCompleted(rect, _oldRect);
             break;
         default:
             break;
@@ -126,8 +125,8 @@ void BoxItem::hoverMoveEvent ( QGraphicsSceneHoverEvent *event )
 
 QRectF BoxItem::calculateMoveRect(QPointF dragStart, QPointF dragEnd)
 {
-    qreal x = dragEnd.x() - dragStart.x() + _originalRect.left();
-    qreal y = dragEnd.y() - dragStart.y() + _originalRect.top();
+    qreal x = dragEnd.x() - dragStart.x() + _oldRect.left();
+    qreal y = dragEnd.y() - dragStart.y() + _oldRect.top();
 
     if (x <= _sceneRect.left()) {
         x = _sceneRect.left();
@@ -152,8 +151,8 @@ QRectF BoxItem::calculateStretchRect(QPointF dragStart, QPointF dragEnd)
     qreal dx = dragEnd.x() - dragStart.x();
     qreal dy = dragEnd.y() - dragStart.y();
 
-    qreal left = _originalRect.left(), top = _originalRect.top();
-    qreal right = _originalRect.right(), bottom = _originalRect.bottom();
+    qreal left = _oldRect.left(), top = _oldRect.top();
+    qreal right = _oldRect.right(), bottom = _oldRect.bottom();
     qreal newLeft=left, newTop=top, newRight=right, newBottom=bottom;
 
     switch(_selectedGrabber) {
@@ -202,28 +201,6 @@ QRectF BoxItem::calculateStretchRect(QPointF dragStart, QPointF dragEnd)
     return QRectF(newLeft, newTop, newRight-newLeft, newBottom-newTop);
 }
 
-void BoxItem::moveBox(QPointF dragStart, QPointF dragEnd)
-{
-    qreal x = dragEnd.x() - dragStart.x() + _originalRect.left();
-    qreal y = dragEnd.y() - dragStart.y() + _originalRect.top();
-
-    if (x <= _sceneRect.left()) {
-        x = _sceneRect.left();
-    }
-    if (y <= _sceneRect.top()) {
-        y = _sceneRect.top();
-    }
-    if (_sceneRect.right()-x <= _rect.width()) {
-        x = _sceneRect.right() - _rect.width();
-    }
-
-    if (_sceneRect.bottom()-y <= _rect.height()) {
-        y = _sceneRect.bottom() - _rect.height();
-    }
-
-    this->setRect(x, y, _rect.width(), _rect.height());
-}
-
 void BoxItem::setRect(const qreal x, qreal y, qreal w, qreal h)
 {
     setRect(QRectF(x, y, w, h));
@@ -248,13 +225,20 @@ void BoxItem::setRect(const QRectF &rect)
     if (halfpw > 0.0)
         _boundingRect.adjust(-halfpw, -halfpw, halfpw, halfpw);
 
-    qreal _xScale = _imageWidth*1.0/_sceneRect.width();
-    qreal _yScale = _imageHeight*1.0/_sceneRect.height();
-    QRect r((int)(_rect.left()*_xScale), (int)(_rect.top()*_yScale),
-            (int)(_rect.width()*_xScale), (int)(_rect.height()*_yScale));
-    emit boxSelected(r);
+    // emit the selected box real rect to scene and statusbar.
+    emit boxSelected(getRealRect(), _typeName);
 
     this->update();
+}
+
+QRect BoxItem::getRealRect()
+{
+    qreal _xScale = _imageSize.width()*1.0/_sceneRect.width();
+    qreal _yScale = _imageSize.height()*1.0/_sceneRect.height();
+    QRect r((int)(_rect.left()*_xScale), (int)(_rect.top()*_yScale),
+            (int)(_rect.width()*_xScale), (int)(_rect.height()*_yScale));
+
+    return r;
 }
 
 void BoxItem::setTypeName(QString name)
@@ -286,11 +270,8 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->drawRect(_rect);
 
     _textRect.setPos(_rect.topLeft());
-    qreal _xScale = _imageWidth*1.0/_sceneRect.width();
-    qreal _yScale = _imageHeight*1.0/_sceneRect.height();
 
-    QRect r((int)(_rect.left()*_xScale), (int)(_rect.top()*_yScale),
-            (int)(_rect.width()*_xScale), (int)(_rect.height()*_yScale));
+    QRect r = getRealRect();
     QString rectInfo = QString("[%1,%2,%3,%4]")
             .arg(r.left()).arg(r.top())
             .arg(r.width()).arg(r.height());
@@ -435,8 +416,8 @@ void BoxItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     if (selectedAction) {
         QString name = selectedAction->text();
         if (_typeNameList.contains(name)) {
-//            setTypeName(name);
-            emit targetTypeChanged(name);
+            emit typeNameChanged(name);
+            emit boxSelected(getRealRect(), name);
         }
     }
 }

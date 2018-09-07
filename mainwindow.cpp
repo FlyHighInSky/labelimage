@@ -34,7 +34,7 @@ MainWindow::MainWindow()
     this->retranslate();
 }
 /**
- * @brief MainWindow::openDirectory
+ * @brief MainWindow::openFolder
  *        Open the specified directory that contains images to be labeled.
  */
 void MainWindow::openFolder()
@@ -368,11 +368,12 @@ void MainWindow::retranslate()
                                  .arg(_imageSize.height())
                                  .toUtf8());
     if (!_boxRect.isNull())
-        _labelBoxRect->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4"))
+        _labelBoxInfo->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4, type-%5"))
                                .arg(_boxRect.left())
                                .arg(_boxRect.top())
                                .arg(_boxRect.width())
                                .arg(_boxRect.height())
+                               .arg(_boxTypeName)
                                .toUtf8());
     if (!_cursorPos.isNull())
         _labelCursorPos->setText(QString(tr("Cursor: %1, %2"))
@@ -403,11 +404,14 @@ void MainWindow::createCentralWindow()
 
     _labelCursorPos = new QLabel();
     _labelImageSize = new QLabel();
-    _labelBoxRect = new QLabel();
+    _labelBoxInfo = new QLabel();
     this->statusBar()->addPermanentWidget(new QLabel(), 1);
     this->statusBar()->addPermanentWidget(_labelCursorPos, 1);
-    this->statusBar()->addPermanentWidget(_labelBoxRect, 1);
+    this->statusBar()->addPermanentWidget(new QLabel(), 1);
+    this->statusBar()->addPermanentWidget(_labelBoxInfo, 1);
+    this->statusBar()->addPermanentWidget(new QLabel(), 1);
     this->statusBar()->addPermanentWidget(_labelImageSize, 1);
+    this->statusBar()->addPermanentWidget(new QLabel(), 1);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -438,7 +442,7 @@ void MainWindow::displayImageView(QString imageFilePath)
 
     _viewScene->installEventFilter(this);
     connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
-    connect(_viewScene, SIGNAL(boxSelected(QRect)), this, SLOT(updateLabelBoxRect(QRect)));
+    connect(_viewScene, SIGNAL(boxSelected(QRect, QString)), this, SLOT(updateBoxInfo(QRect, QString)));
     connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
 
     _viewScene->loadImage(imageFilePath);
@@ -463,6 +467,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     if (obj == _viewScene || obj == this) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+            // use Key_Down and Key_Up received by _viewScene and MainWindow to select image in fileListView
             if (keyEvent->key() == Qt::Key_Down || keyEvent->key() == Qt::Key_Up ) {
 //                qApp->sendEvent(fileListView, event);
                 int rowCount = fileListModel->rowCount(fileListView->rootIndex());
@@ -476,10 +481,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                 fileListView->setCurrentIndex(index);
                 return true;
             }
-            return false;
-        } else {
-            return false;
         }
+        return false;
     } else {
         // pass the event on to the parent class
         return QMainWindow::eventFilter(obj, event);
@@ -489,8 +492,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 void MainWindow::editTargetType()
 {
     TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &translator);
-    int resutl = d->exec();
-    if (resutl == QDialog::Accepted) {
+    int r = d->exec();
+    if (r == QDialog::Accepted) {
         delete d;
     }
 }
@@ -568,14 +571,16 @@ void MainWindow::updateLabelImageSize(QSize imageSize)
                              .toUtf8());
 }
 
-void MainWindow::updateLabelBoxRect(QRect boxRect)
+void MainWindow::updateBoxInfo(QRect rect, QString typeName)
 {
-    _boxRect = boxRect;
-    _labelBoxRect->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4"))
+    _boxRect = rect;
+    _boxTypeName = typeName;
+    _labelBoxInfo->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4, type-%5"))
                            .arg(_boxRect.left())
                            .arg(_boxRect.top())
                            .arg(_boxRect.width())
                            .arg(_boxRect.height())
+                           .arg(_boxTypeName)
                            .toUtf8());
 }
 
