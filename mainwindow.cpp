@@ -463,8 +463,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     if (obj == _viewScene || obj == this) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-            if (keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down) {
-                qApp->sendEvent(fileListView, event);
+            if (keyEvent->key() == Qt::Key_Down || keyEvent->key() == Qt::Key_Up ) {
+//                qApp->sendEvent(fileListView, event);
+                int rowCount = fileListModel->rowCount(fileListView->rootIndex());
+                int currentRow = fileListView->currentIndex().row();
+                if (keyEvent->key() == Qt::Key_Down) {
+                    currentRow = qMin(rowCount-1, currentRow+1);
+                } else if (keyEvent->key() == Qt::Key_Up) {
+                    currentRow = qMax(0, currentRow-1);
+                }
+                QModelIndex index = fileListModel->index(currentRow,  0, fileListView->rootIndex());
+                fileListView->setCurrentIndex(index);
                 return true;
             }
             return false;
