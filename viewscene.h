@@ -49,6 +49,8 @@ public:
     void selectBoxItems(BoxItem *box, bool op);
     void selectBoxItems(bool op);
     void registerItem(BoxItem *b);
+    void drawingBoxRect(bool op);
+    void panImage(bool op);
 
 private slots:
     void changeBoxTypeName(QString name);
@@ -68,19 +70,23 @@ protected:
     void keyPressEvent(QKeyEvent *keyEvent);
     void keyReleaseEvent(QKeyEvent *keyEvent);
     void deleteBoxItems();
+//    bool eventFilter(QObject *obj, QEvent *event);
 private:
     QImage *_image;
     QGraphicsPixmapItem *_pixmapItem = nullptr;
-    BoxItem* _boxItem = nullptr;
+    BoxItem* _boxItem = nullptr;//, *_selectedBoxItem;
     QStringList _typeNameList;
     double _zoomFactor = 1;
     QPointF _dragStart, _dragEnd;
     bool _isPanning = false;
     bool _isDrawing = false;
+    bool _isMoving = false;
+    bool _isMouseMoved = false;
     QPointF _leftTopPoint;
     QPointF _rightBottomPoint;
     QString _labelFilePath;
     QUndoStack *_undoStack;
+    QCursor _oldCursor = Qt::ArrowCursor;
     void loadBoxItemsFromFile();
     void saveBoxItemsToFile();
 };

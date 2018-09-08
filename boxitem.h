@@ -66,6 +66,7 @@ public:
     {
         return _rect;
     }
+    QRectF _oldRect;
 
     enum { Type = UserType + 1 };
     int type() const
@@ -110,7 +111,7 @@ private:
     QSize _imageSize;
     QRectF _sceneRect;
     QRectF _rect;
-    QRectF _oldRect;
+
     QGraphicsTextItem _textRect, _textName;
     QRectF _boundingRect;
     QStringList _typeNameList;

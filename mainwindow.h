@@ -86,20 +86,24 @@ public:
 
 private slots:
     void openFolder();
+    void pan();
     void zoomIn();
     void zoomOut();
-    void editTargetType();
+    void drawBoxRect();
+    void editTypeNames();
     void fitViewToWindow();
     void fitViewToActual();
     void fullScreen();
     void help();
     void about();
     void onFileSelected(const QItemSelection& selected, const QItemSelection& deselected);
-//    void onFileSelected(const QModelIndex& selected);//, const QModelIndex& deselected);
     void updateLabelImageSize(QSize imageSize);
     void updateLabelCursorPos(QPointF cursorPos);
     void updateBoxInfo(QRect rect, QString typeName);
     void switchLanguage();
+//signals:
+//    void isDrawing(bool op);
+
 private:
     void wheelEvent(QWheelEvent *event);
     void resizeEvent(QResizeEvent* event);
@@ -114,77 +118,75 @@ private:
     QStringList loadTypeNameFromFile(QString filePath);
     void displayImageView(QString imageFilePath);
 
-    QWidget *centralWidget;
-    QAction *fitToWindowAct;
-    QHBoxLayout *horizontalLayout;
-    QSplitter *mainSplitter;
-    QTreeView *fileListView;
-    QGraphicsView *imageView;
+    QWidget *_centralWidget;
+    QAction *_fitToWindowAct;
+    QHBoxLayout *_horizontalLayout;
+    QSplitter *_mainSplitter;
+    QTreeView *_fileListView;
+    QGraphicsView *_imageView;
     ViewScene *_viewScene = nullptr;
-//    QFileSystemModel *fileListModel = nullptr;
-    QDirModel *fileListModel = nullptr;
-//    QStringList filters;
-    QStringList filters;
+    QDirModel *_fileListModel = nullptr;
+    QStringList _filters;
     QString _typeNameFile;
     QStringList _typeNameList;
     QString _languageFile;
-    bool isImageLoaded =  false;
-    QScrollArea *scrollArea;
-    double scaleFactor;
+    bool _isImageLoaded =  false;
     QLabel *_labelCursorPos, *_labelImageSize, *_labelBoxInfo;
     QPointF _cursorPos;
     QSize _imageSize;
     QRect _boxRect;
     QString _boxTypeName;
 
-    QTranslator translator;
+    QTranslator _translator;
 
-    QAction *zhCNAct, *enUSAct;
-    QMenu *fileMenu;
-    QToolBar *fileToolBar;
-    QAction *openAct;
-    QAction *exitAct;
-    QMenu *editMenu;
-    QToolBar *editToolBar;
-    QAction *editAct;
-    QAction *undoAct;
-    QAction *redoAct;
+    QAction *_zhCNAct, *_enUSAct;
+    QMenu *_fileMenu;
+    QToolBar *_fileToolBar;
+    QAction *_openAct;
+    QAction *_exitAct;
+    QMenu *_editMenu;
+    QToolBar *_editToolBar;
+    QAction *_drawAct;
+    QAction *_editAct;
+    QAction *_undoAct;
+    QAction *_redoAct;
     QUndoGroup *_undoGroup;
-    QMenu *viewMenu;
-    QToolBar *viewToolBar;
-    QAction *zoomInAct;
-    QAction *zoomOutAct;
-    QAction *actualSizeAct;
-    QAction *fullscreenAct;
-    QMenu *helpMenu;
-    QToolBar *helpToolBar;
-    QMenu *languageMenu;
-    QAction *helpAct;
-    QAction *aboutAct;
+    QMenu *_viewMenu;
+    QToolBar *_viewToolBar;
+    QAction *_panAct;
+    QAction *_zoomInAct;
+    QAction *_zoomOutAct;
+    QAction *_actualSizeAct;
+    QAction *_fullscreenAct;
+    QMenu *_helpMenu;
+    QToolBar *_helpToolBar;
+    QMenu *_languageMenu;
+    QAction *_helpAct;
+    QAction *_aboutAct;
     QMessageBox _helpMessageBox, _aboutMessageBox;
-    const char *helpText = "<p>"
+    const char *_helpText = "<p>"
                            "Press <b>Right Mouse Button</b> on selected box to change target type.<br />"
                            "<hr />"
-                           "<b>Shift Key + Left Mouse Button:</b> Draw Box<br />"
+                           "<b>Ctrl + D:</b> Draw Box<br />"
                            "<hr />"
                            "<b>Delete Key:</b> Delete Selected Box<br />"
                            "<hr />"
                            "<b>Ctrl + A:</b> Select All Boxes<br />"
                            "<hr />"
                            "<b>Up/Down Arrow Key:</b> Switch images</p>";
-    const char *aboutText = "<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>";
+    const char *_aboutText = "<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>";
 
-    const QString trHelpText = tr("<p>"
+    const QString _trHelpText = tr("<p>"
                            "Press <b>Right Mouse Button</b> on selected box to change target type.<br />"
                            "<hr />"
-                           "<b>Shift Key + Left Mouse Button:</b> Draw Box<br />"
+                           "<b>Ctrl + D:</b> Draw Box<br />"
                            "<hr />"
                            "<b>Delete Key:</b> Delete Selected Box<br />"
                            "<hr />"
                            "<b>Ctrl + A:</b> Select All Boxes<br />"
                            "<hr />"
                            "<b>Up/Down Arrow Key:</b> Switch images</p>");
-    const QString trAboutText = tr("<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>");
+    const QString _trAboutText = tr("<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>");
 };
 //! [0]
 

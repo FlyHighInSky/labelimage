@@ -32,18 +32,19 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
     event->setAccepted(true);
     switch (event->buttons()) {
     case Qt::LeftButton:
-        _selectedGrabber = getSelectedGrabber(event->pos());
-        setGrabberCursor(_selectedGrabber);
+        if (this->isSelected()) {
+            _selectedGrabber = getSelectedGrabber(event->pos());
+            setGrabberCursor(_selectedGrabber);
 
-        _dragStart = event->pos();
-        if (_selectedGrabber != BoxRegion) { // grabber is selected
-            _taskStatus = Stretching;
-        } else if (_rect.contains(event->pos())) { // box is selected
-            _taskStatus = Moving;
+            _dragStart = event->pos();
+            if (_selectedGrabber != BoxRegion) { // grabber is selected
+                _taskStatus = Stretching;
+            } else if (_rect.contains(event->pos())) { // box is selected
+                _taskStatus = Moving;
+            }
+            // emit the selected box real rect to scene and statusbar.
+            emit boxSelected(getRealRect(), _typeName);
         }
-        this->setSelected(true);
-        // emit the selected box real rect to scene and statusbar.
-        emit boxSelected(getRealRect(), _typeName);
         break;
     case Qt::RightButton:
         this->setSelected(true);
@@ -58,24 +59,28 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
 {
     QRectF rect;
     event->setAccepted(true);
-    if (_isMouseMoved) {
-        switch (_taskStatus) {
-        case Moving:
-            _dragEnd = event->pos();
-            rect = calculateMoveRect(_dragStart, _dragEnd);
-            emit moveCompleted(rect, _oldRect);
-            break;
-        case Stretching:
-            this->setCursor(Qt::ArrowCursor);
-            _dragEnd = event->pos();
-            rect = calculateStretchRect(_dragStart, _dragEnd);
-            emit stretchCompleted(rect, _oldRect);
-            break;
-        default:
-            break;
+    if (this->isSelected()) {
+        if (_isMouseMoved) {
+            switch (_taskStatus) {
+            case Moving:
+                _dragEnd = event->pos();
+                rect = calculateMoveRect(_dragStart, _dragEnd);
+                emit moveCompleted(rect, _oldRect);
+                break;
+            case Stretching:
+                this->setCursor(Qt::ArrowCursor);
+                _dragEnd = event->pos();
+                rect = calculateStretchRect(_dragStart, _dragEnd);
+                emit stretchCompleted(rect, _oldRect);
+                break;
+            default:
+                break;
+            }
+            _taskStatus = Waiting;
         }
-        _taskStatus = Waiting;
         _isMouseMoved = false;
+    } else {
+        this->setSelected(true);
     }
 }
 

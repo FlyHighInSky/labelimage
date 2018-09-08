@@ -19,5 +19,7 @@
         <file>languages/zh_CN.qm</file>
         <file>images/draw.ico</file>
         <file>images/edit.png</file>
+        <file>images/draw.png</file>
+        <file>images/pan.png</file>
     </qresource>
 </RCC>

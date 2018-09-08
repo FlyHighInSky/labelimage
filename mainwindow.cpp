@@ -19,18 +19,18 @@
 
 MainWindow::MainWindow()
 {
-    setWindowIcon(QIcon(":/images/draw.png"));
+    setWindowIcon(QIcon(":/images/draw.ico"));
     setWindowTitle(tr("Image Labeler"));
     createActions();
     createCentralWindow();
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
     this->installEventFilter(this);
-    fileListView->installEventFilter(this);
-    imageView->installEventFilter(this);
+    _fileListView->installEventFilter(this);
+    _imageView->installEventFilter(this);
 
     _languageFile = ":/languages/zh_CN.qm";
-    translator.load(_languageFile);
-    qApp->installTranslator( &translator );
+    _translator.load(_languageFile);
+    qApp->installTranslator( &_translator );
     this->retranslate();
 }
 /**
@@ -46,39 +46,40 @@ void MainWindow::openFolder()
     if (!srcImageDir.isEmpty()) {
         setWindowTitle(srcImageDir);
 
-        if (fileListModel){
-            delete fileListModel;
-            fileListModel = nullptr;
-            editAct->setEnabled(false);
+        if (_fileListModel){
+            delete _fileListModel;
+            _fileListModel = nullptr;
+            _editAct->setEnabled(false);
         }
 
         // init dirmodel
-        filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
-        fileListModel = new QDirModel(filters, QDir::Files | QDir::NoDotAndDotDot, QDir::Name, this);
+        _filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
+        _fileListModel = new QDirModel(_filters, QDir::Files | QDir::NoDotAndDotDot, QDir::Name, this);
 
         // init treeview and set model
 //        fileListView->setFocus();
-        fileListView->setRootIsDecorated(0);
-        fileListView->setModel(fileListModel);
-        fileListView->setRootIndex(fileListModel->index(srcImageDir));
-        fileListView->setSelectionMode(QAbstractItemView::SingleSelection);
+        _fileListView->setRootIsDecorated(0);
+        _fileListView->setModel(_fileListModel);
+        _fileListView->setRootIndex(_fileListModel->index(srcImageDir));
+        _fileListView->setSelectionMode(QAbstractItemView::SingleSelection);
 
-        connect(fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
+        connect(_fileListView->selectionModel(), &QItemSelectionModel::selectionChanged,
                 this, &MainWindow::onFileSelected);
 
         // load typenamefile and init typename list.
         _typeNameList.clear();
         _typeNameFile= srcImageDir + "/names.txt";
         _typeNameList = loadTypeNameFromFile(_typeNameFile);
-        editAct->setEnabled(true);
+        _editAct->setEnabled(true);
         if (_typeNameList.count() <= 0) {
-            editTargetType();
+            editTypeNames();
             _typeNameList = loadTypeNameFromFile(_typeNameFile);
         }
 
         // set the first image selected.
-        QModelIndex index = fileListModel->index(0, 0, fileListView->rootIndex());
-        fileListView->setCurrentIndex(index);
+        QModelIndex index = _fileListModel->index(0, 0, _fileListView->rootIndex());
+        _fileListView->setCurrentIndex(index);
+        _drawAct->setEnabled(true);
     }
 }
 
@@ -104,14 +105,14 @@ void MainWindow::help()
 {
     _helpMessageBox.about(this,
                           qApp->translate("MainWindow", "Help"),
-                          qApp->translate("MainWindow", helpText));
+                          qApp->translate("MainWindow", _helpText));
 }
 
 void MainWindow::about()
 {
     _aboutMessageBox.about(this,
                            qApp->translate("MainWindow", "About Image Labeler"),
-                           qApp->translate("MainWindow", aboutText));
+                           qApp->translate("MainWindow", _aboutText));
 }
 
 /**
@@ -120,246 +121,276 @@ void MainWindow::about()
 void MainWindow::createActions()
 {
     // file menu
-    fileMenu = menuBar()->addMenu(tr("&File"));
-    fileToolBar = addToolBar(tr("File"));
+    _fileMenu = menuBar()->addMenu(tr("&File"));
+    _fileToolBar = addToolBar(tr("File"));
 
     // open folder
     const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(":/images/folder.png"));
-    openAct = new QAction(openIcon, tr("&Open Folder..."), this);
-    openAct->setShortcuts(QKeySequence::Open);
-    openAct->setStatusTip(tr("Open an image folder"));
-    connect(openAct, &QAction::triggered, this, &MainWindow::openFolder);
-    fileMenu->addAction(openAct);
-    fileToolBar->addAction(openAct);
+    _openAct = new QAction(openIcon, tr("&Open Folder..."), this);
+    _openAct->setShortcuts(QKeySequence::Open);
+    _openAct->setStatusTip(tr("Open an image folder"));
+    connect(_openAct, &QAction::triggered, this, &MainWindow::openFolder);
+    _fileMenu->addAction(_openAct);
+    _fileToolBar->addAction(_openAct);
 
     // quit
     const QIcon exitIcon = QIcon::fromTheme("application-exit", QIcon(":/images/quit.png"));
-    exitAct = fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
-    exitAct->setShortcut(tr("Ctrl+Q"));
-    exitAct->setStatusTip(tr("Exit the application"));
-    fileMenu->addAction(exitAct);
-    fileToolBar->addAction(exitAct);
+    _exitAct = _fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
+    _exitAct->setShortcut(tr("Ctrl+Q"));
+    _exitAct->setStatusTip(tr("Exit the application"));
+    _fileMenu->addAction(_exitAct);
+    _fileToolBar->addAction(_exitAct);
 
     menuBar()->addSeparator();
 
     // edit menu
-    editMenu = menuBar()->addMenu(tr("&Edit"));
-    editToolBar = addToolBar(tr("Edit"));
+    _editMenu = menuBar()->addMenu(tr("&Edit"));
+    _editToolBar = addToolBar(tr("Edit"));
+
+    // draw box rect
+    _drawAct = new QAction(QIcon(":/images/draw.png"), tr("&Draw Box"), this);
+    _drawAct->setShortcut(tr("Ctrl+D"));
+    _drawAct->setStatusTip(tr("Draw Box"));
+    connect(_drawAct, &QAction::triggered, this, &MainWindow::drawBoxRect);
+    _editMenu->addAction(_drawAct);
+    _editToolBar->addAction(_drawAct);
+    _drawAct->setEnabled(false);
+    _drawAct->setCheckable(true);
+    _drawAct->setChecked(false);
 
     // edit target type
-    editAct = new QAction(QIcon(":/images/edit.png"), tr("&Target Type"), this);
-    editAct->setShortcut(tr("Ctrl+T"));
-    editAct->setStatusTip(tr("Edit Target Type"));
-    connect(editAct, &QAction::triggered, this, &MainWindow::editTargetType);
-    editMenu->addAction(editAct);
-    editToolBar->addAction(editAct);
-    editAct->setEnabled(false);
+    _editAct = new QAction(QIcon(":/images/edit.png"), tr("&Target Type"), this);
+    _editAct->setShortcut(tr("Ctrl+T"));
+    _editAct->setStatusTip(tr("Edit Target Type"));
+    connect(_editAct, &QAction::triggered, this, &MainWindow::editTypeNames);
+    _editMenu->addAction(_editAct);
+    _editToolBar->addAction(_editAct);
+    _editAct->setEnabled(false);
 
     _undoGroup = new QUndoGroup(this);
     // undo
-    undoAct = _undoGroup->createUndoAction(this);
-    undoAct->setIcon(QIcon(":/images/undo.png"));
-    undoAct->setText(tr("&Undo"));
-    undoAct->setStatusTip(tr("Undo"));
-    undoAct->setShortcut(QKeySequence::Undo);
-    editMenu->addAction(undoAct);
-    editToolBar->addAction(undoAct);
+    _undoAct = _undoGroup->createUndoAction(this);
+    _undoAct->setIcon(QIcon(":/images/undo.png"));
+    _undoAct->setText(tr("&Undo"));
+    _undoAct->setStatusTip(tr("Undo"));
+    _undoAct->setShortcut(QKeySequence::Undo);
+    _editMenu->addAction(_undoAct);
+    _editToolBar->addAction(_undoAct);
 
     // redo
-    redoAct = _undoGroup->createRedoAction(this);
-    redoAct->setIcon(QIcon(":/images/redo.png"));
-    redoAct->setText(tr("&Redo"));
-    redoAct->setStatusTip(tr("Redo"));
-    redoAct->setShortcut(QKeySequence::Redo);
-    editMenu->addAction(redoAct);
-    editToolBar->addAction(redoAct);
+    _redoAct = _undoGroup->createRedoAction(this);
+    _redoAct->setIcon(QIcon(":/images/redo.png"));
+    _redoAct->setText(tr("&Redo"));
+    _redoAct->setStatusTip(tr("Redo"));
+    _redoAct->setShortcut(QKeySequence::Redo);
+    _editMenu->addAction(_redoAct);
+    _editToolBar->addAction(_redoAct);
 
     menuBar()->addSeparator();
 
     // view menu
-    viewMenu = menuBar()->addMenu(tr("&View"));
-    viewToolBar = addToolBar(tr("View"));
+    _viewMenu = menuBar()->addMenu(tr("&View"));
+    _viewToolBar = addToolBar(tr("View"));
+
+    // pan
+    _panAct = new QAction(QIcon(":/images/pan.png"), tr("&Pan"), this);
+    _panAct->setShortcut(tr("Ctrl+P"));
+    _panAct->setStatusTip(tr("Pan Image"));
+    _panAct->setCheckable(true);
+    _panAct->setChecked(false);
+    connect(_panAct, &QAction::triggered, this, &MainWindow::pan);
+    _viewMenu->addAction(_panAct);
+    _viewToolBar->addAction(_panAct);
 
     // zoom in
     const QIcon zoomInIcon = QIcon::fromTheme("document-open", QIcon(":/images/zoom-in.png"));
-    zoomInAct = new QAction(zoomInIcon, tr("Zoom &In"), this);
-    zoomInAct->setShortcut(QKeySequence::ZoomIn);
-    zoomInAct->setStatusTip(tr("Zoom In Image"));
-    connect(zoomInAct, &QAction::triggered, this, &MainWindow::zoomIn);
-    viewMenu->addAction(zoomInAct);
-    viewToolBar->addAction(zoomInAct);
+    _zoomInAct = new QAction(zoomInIcon, tr("Zoom &In"), this);
+    _zoomInAct->setShortcut(QKeySequence::ZoomIn);
+    _zoomInAct->setStatusTip(tr("Zoom In Image"));
+    connect(_zoomInAct, &QAction::triggered, this, &MainWindow::zoomIn);
+    _viewMenu->addAction(_zoomInAct);
+    _viewToolBar->addAction(_zoomInAct);
 
     // zoom out
     const QIcon zoomOutIcon = QIcon::fromTheme("document-open", QIcon(":/images/zoom-out.png"));
-    zoomOutAct = new QAction(zoomOutIcon, tr("Zoom &Out"), this);
-    zoomOutAct->setShortcut(QKeySequence::ZoomOut);
-    zoomOutAct->setStatusTip(tr("Zoom Out Image"));
-    connect(zoomOutAct, &QAction::triggered, this, &MainWindow::zoomOut);
-    viewMenu->addAction(zoomOutAct);
-    viewToolBar->addAction(zoomOutAct);
+    _zoomOutAct = new QAction(zoomOutIcon, tr("Zoom &Out"), this);
+    _zoomOutAct->setShortcut(QKeySequence::ZoomOut);
+    _zoomOutAct->setStatusTip(tr("Zoom Out Image"));
+    connect(_zoomOutAct, &QAction::triggered, this, &MainWindow::zoomOut);
+    _viewMenu->addAction(_zoomOutAct);
+    _viewToolBar->addAction(_zoomOutAct);
 
     // fit to window
     const QIcon fitInIcon = QIcon::fromTheme("document-open", QIcon(":/images/fit-to-window.png"));
-    fitToWindowAct = new QAction(fitInIcon, tr("&Fit To Window"), this);
-    fitToWindowAct->setShortcut(tr("Ctrl+F"));
-    fitToWindowAct->setStatusTip(tr("Fit View To Window"));
-    connect(fitToWindowAct, &QAction::triggered, this, &MainWindow::fitViewToWindow);
-    fitToWindowAct->setCheckable(true);
-    fitToWindowAct->setChecked(true);
-    viewMenu->addAction(fitToWindowAct);
-    viewToolBar->addAction(fitToWindowAct);
+    _fitToWindowAct = new QAction(fitInIcon, tr("&Fit To Window"), this);
+    _fitToWindowAct->setShortcut(tr("Ctrl+F"));
+    _fitToWindowAct->setStatusTip(tr("Fit View To Window"));
+    connect(_fitToWindowAct, &QAction::triggered, this, &MainWindow::fitViewToWindow);
+    _fitToWindowAct->setCheckable(true);
+    _fitToWindowAct->setChecked(true);
+    _viewMenu->addAction(_fitToWindowAct);
+    _viewToolBar->addAction(_fitToWindowAct);
 
     // actual size
     const QIcon actualSizeIcon = QIcon::fromTheme("document-open", QIcon(":/images/actual-size.png"));
-    actualSizeAct = new QAction(actualSizeIcon, tr("&Actual Size"), this);
-    actualSizeAct->setShortcut(tr("Ctrl+R"));
-    actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
-    connect(actualSizeAct, &QAction::triggered, this, &MainWindow::fitViewToActual);
-    viewMenu->addAction(actualSizeAct);
-    viewToolBar->addAction(actualSizeAct);
+    _actualSizeAct = new QAction(actualSizeIcon, tr("&Actual Size"), this);
+    _actualSizeAct->setShortcut(tr("Ctrl+R"));
+    _actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
+    connect(_actualSizeAct, &QAction::triggered, this, &MainWindow::fitViewToActual);
+    _viewMenu->addAction(_actualSizeAct);
+    _viewToolBar->addAction(_actualSizeAct);
 
-    viewMenu->addSeparator();
+    _viewMenu->addSeparator();
 
     // full screen
     const QIcon fullscreenIcon = QIcon::fromTheme("document-open", QIcon(":/images/fullscreen.png"));
-    fullscreenAct = new QAction(fullscreenIcon, tr("&Full Screen"), this);
-    fullscreenAct->setShortcut(tr("Alt+Enter"));
-    fullscreenAct->setStatusTip(tr("Full Screen"));
-    connect(fullscreenAct, &QAction::triggered, this, &MainWindow::fullScreen);
-    viewMenu->addAction(fullscreenAct);
-    viewToolBar->addAction(fullscreenAct);
+    _fullscreenAct = new QAction(fullscreenIcon, tr("&Full Screen"), this);
+    _fullscreenAct->setShortcut(tr("Alt+Enter"));
+    _fullscreenAct->setStatusTip(tr("Full Screen"));
+    connect(_fullscreenAct, &QAction::triggered, this, &MainWindow::fullScreen);
+    _viewMenu->addAction(_fullscreenAct);
+    _viewToolBar->addAction(_fullscreenAct);
 
     // help menu
-    helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpToolBar = addToolBar(tr("Help"));
+    _helpMenu = menuBar()->addMenu(tr("&Help"));
+    _helpToolBar = addToolBar(tr("Help"));
 
     // language
-    languageMenu = helpMenu->addMenu(
+    _languageMenu = _helpMenu->addMenu(
                 QIcon::fromTheme("document-open", QIcon(":/images/language.png")), tr("&Language"));
-    languageMenu->setStatusTip(tr("Select language"));
+    _languageMenu->setStatusTip(tr("Select language"));
 
     // Chinese
-    zhCNAct = languageMenu->addAction(
+    _zhCNAct = _languageMenu->addAction(
                 QIcon::fromTheme("document-open", QIcon(":/images/zh_CN.png")),
                 tr("&Chinese"));
-    languageMenu->addAction(zhCNAct);
-    helpToolBar->addAction(zhCNAct);
-    connect(zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+    _languageMenu->addAction(_zhCNAct);
+    _helpToolBar->addAction(_zhCNAct);
+    connect(_zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
     // English
-    enUSAct = languageMenu->addAction(
+    _enUSAct = _languageMenu->addAction(
                 QIcon::fromTheme("document-open", QIcon(":/images/en_US.png")),
                 tr("&English"));
-    languageMenu->addAction(enUSAct);
-    helpToolBar->addAction(enUSAct);
-    connect(enUSAct, &QAction::triggered, this, &MainWindow::switchLanguage);
+    _languageMenu->addAction(_enUSAct);
+    _helpToolBar->addAction(_enUSAct);
+    connect(_enUSAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
     // help
-    helpAct = helpMenu->addAction(
+    _helpAct = _helpMenu->addAction(
                 QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
                 tr("&Help"), this, &MainWindow::help);
-    helpAct->setStatusTip(tr("Help"));
-    helpAct->setShortcut(QKeySequence::HelpContents);
-    helpToolBar->addAction(helpAct);
+    _helpAct->setStatusTip(tr("Help"));
+    _helpAct->setShortcut(QKeySequence::HelpContents);
+    _helpToolBar->addAction(_helpAct);
 
     // about
-    aboutAct = helpMenu->addAction(
+    _aboutAct = _helpMenu->addAction(
                 QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
                 tr("&About"), this, &MainWindow::about);
-    aboutAct->setStatusTip(tr("About Image Labeler"));
-    helpToolBar->addAction(aboutAct);
+    _aboutAct->setStatusTip(tr("About Image Labeler"));
+    _helpToolBar->addAction(_aboutAct);
 }
 
 void MainWindow::switchLanguage()
 {
-    if (this->sender() == zhCNAct) {
+    if (this->sender() == _zhCNAct) {
         _languageFile = ":/languages/zh_CN.qm";
-    } else if (this->sender() == enUSAct) {
+    } else if (this->sender() == _enUSAct) {
         _languageFile = ":/languages/en_US.qm";
     }
-    translator.load(_languageFile);
-    qApp->installTranslator( &translator );
+    _translator.load(_languageFile);
+    qApp->installTranslator( &_translator );
     this->retranslate();
 }
 
 void MainWindow::retranslate()
 {
     // file menu
-    fileMenu->setTitle(tr("&File"));
+    _fileMenu->setTitle(tr("&File"));
     //    fileToolBar->setTitle(tr("File"));
 
     // open folder
-    openAct->setText(tr("&Open Folder..."));
-    openAct->setStatusTip(tr("Open an image folder"));
+    _openAct->setText(tr("&Open Folder..."));
+    _openAct->setStatusTip(tr("Open an image folder"));
 
     // quit
-    exitAct->setText(tr("E&xit"));
-    exitAct->setShortcut(tr("Ctrl+Q"));
-    exitAct->setStatusTip(tr("Exit the application"));
+    _exitAct->setText(tr("E&xit"));
+    _exitAct->setShortcut(tr("Ctrl+Q"));
+    _exitAct->setStatusTip(tr("Exit the application"));
 
     // edit menu
-    editMenu->setTitle(tr("&Edit"));
+    _editMenu->setTitle(tr("&Edit"));
+
+    // draw box rect
+    _drawAct->setText(tr("&Draw Box"));
+    _drawAct->setShortcut(tr("Ctrl+D"));
+    _drawAct->setStatusTip(tr("Draw Box"));
 
     // edit target type
-    editAct ->setText(tr("&Target Type"));
-    editAct->setShortcut(tr("Ctrl+T"));
-    editAct->setStatusTip(tr("Edit Target Type"));
+    _editAct ->setText(tr("&Target Type"));
+    _editAct->setShortcut(tr("Ctrl+T"));
+    _editAct->setStatusTip(tr("Edit Target Type"));
 
     // undo
-    undoAct->setText(tr("&Undo"));
-    undoAct->setStatusTip(tr("Undo"));
+    _undoAct->setText(tr("&Undo"));
+    _undoAct->setStatusTip(tr("Undo"));
 
     // redo
-    redoAct->setText(tr("&Redo"));
-    redoAct->setStatusTip(tr("Redo"));
+    _redoAct->setText(tr("&Redo"));
+    _redoAct->setStatusTip(tr("Redo"));
 
     // view menu
-    viewMenu->setTitle(tr("&View"));
+    _viewMenu->setTitle(tr("&View"));
     //    viewToolBar->setTitle(tr("View"));
 
+    // pan
+    _panAct->setText(tr("&Pan"));
+    _panAct->setShortcut(tr("Ctrl+P"));
+    _panAct->setStatusTip(tr("Pan Image"));
     // zoom in
-    zoomInAct->setText(tr("Zoom &In"));
-    zoomInAct->setShortcut(QKeySequence::ZoomIn);
-    zoomInAct->setStatusTip(tr("Zoom In Image"));
+    _zoomInAct->setText(tr("Zoom &In"));
+    _zoomInAct->setShortcut(QKeySequence::ZoomIn);
+    _zoomInAct->setStatusTip(tr("Zoom In Image"));
     // zoom out
-    zoomOutAct->setText(tr("Zoom &Out"));
-    zoomOutAct->setShortcut(QKeySequence::ZoomOut);
-    zoomOutAct->setStatusTip(tr("Zoom Out Image"));
+    _zoomOutAct->setText(tr("Zoom &Out"));
+    _zoomOutAct->setShortcut(QKeySequence::ZoomOut);
+    _zoomOutAct->setStatusTip(tr("Zoom Out Image"));
     // fit to window
-    fitToWindowAct->setText(tr("&Fit To Window"));
-    fitToWindowAct->setShortcut(tr("Ctrl+F"));
-    fitToWindowAct->setStatusTip(tr("Fit View To Window"));
+    _fitToWindowAct->setText(tr("&Fit To Window"));
+    _fitToWindowAct->setShortcut(tr("Ctrl+F"));
+    _fitToWindowAct->setStatusTip(tr("Fit View To Window"));
 
     // actual size
-    actualSizeAct->setText(tr("&Actual Size"));
-    actualSizeAct->setShortcut(tr("Ctrl+R"));
-    actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
+    _actualSizeAct->setText(tr("&Actual Size"));
+    _actualSizeAct->setShortcut(tr("Ctrl+R"));
+    _actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
 
     // full screen
-    fullscreenAct->setText(tr("&Full Screen"));
-    fullscreenAct->setShortcut(tr("Alt+Enter"));
-    fullscreenAct->setStatusTip(tr("Full Screen"));
+    _fullscreenAct->setText(tr("&Full Screen"));
+    _fullscreenAct->setShortcut(tr("Alt+Enter"));
+    _fullscreenAct->setStatusTip(tr("Full Screen"));
     // help menu
-    helpMenu->setTitle(tr("&Help"));
+    _helpMenu->setTitle(tr("&Help"));
     //    helpToolBar = addToolBar(tr("Help"));
 
     // language
-    languageMenu->setTitle(tr("&Language"));
-    languageMenu->setStatusTip(tr("Select language"));
+    _languageMenu->setTitle(tr("&Language"));
+    _languageMenu->setStatusTip(tr("Select language"));
 
     // Chinese
-    zhCNAct->setText(tr("&Chinese"));
+    _zhCNAct->setText(tr("&Chinese"));
 
     // English
-    enUSAct->setText(tr("&English"));
+    _enUSAct->setText(tr("&English"));
 
     // help
-    helpAct->setText(tr("&Help"));
-    helpAct->setStatusTip(tr("Help"));
+    _helpAct->setText(tr("&Help"));
+    _helpAct->setStatusTip(tr("Help"));
 
     // about
-    aboutAct->setText(tr("&About"));
-    aboutAct->setToolTip(tr("About Image Labeler"));
+    _aboutAct->setText(tr("&About"));
+    _aboutAct->setToolTip(tr("About Image Labeler"));
 
     // status bar
     if (!_imageSize.isEmpty())
@@ -384,23 +415,23 @@ void MainWindow::retranslate()
 
 void MainWindow::createCentralWindow()
 {
-    centralWidget = new QWidget(this);
-    horizontalLayout = new QHBoxLayout(centralWidget);
-    fileListView = new QTreeView(this);
-    imageView = new QGraphicsView(this);
-    imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+    _centralWidget = new QWidget(this);
+    _horizontalLayout = new QHBoxLayout(_centralWidget);
+    _fileListView = new QTreeView(this);
+    _imageView = new QGraphicsView(this);
+    _imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
 
-    mainSplitter = new QSplitter(Qt::Horizontal, centralWidget);
-    mainSplitter->addWidget(fileListView);
-    mainSplitter->addWidget(imageView);
-    mainSplitter->setStretchFactor(0, 2);
-    mainSplitter->setStretchFactor(1, 8);
-    mainSplitter->setOpaqueResize(false);
+    _mainSplitter = new QSplitter(Qt::Horizontal, _centralWidget);
+    _mainSplitter->addWidget(_fileListView);
+    _mainSplitter->addWidget(_imageView);
+    _mainSplitter->setStretchFactor(0, 2);
+    _mainSplitter->setStretchFactor(1, 8);
+    _mainSplitter->setOpaqueResize(false);
 
-    horizontalLayout->addWidget(mainSplitter);
-    centralWidget->setLayout(horizontalLayout);
-    this->setCentralWidget(centralWidget);
+    _horizontalLayout->addWidget(_mainSplitter);
+    _centralWidget->setLayout(_horizontalLayout);
+    this->setCentralWidget(_centralWidget);
 
     _labelCursorPos = new QLabel();
     _labelImageSize = new QLabel();
@@ -423,13 +454,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::updateActions()
 {
-    zoomInAct->setEnabled(!fitToWindowAct->isChecked());
-    zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
+    _zoomInAct->setEnabled(!_fitToWindowAct->isChecked());
+    _zoomOutAct->setEnabled(!_fitToWindowAct->isChecked());
 }
 
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    displayImageView(fileListModel->filePath(selected.indexes().first()));
+    displayImageView(_fileListModel->filePath(selected.indexes().first()));
 }
 
 void MainWindow::displayImageView(QString imageFilePath)
@@ -444,16 +475,17 @@ void MainWindow::displayImageView(QString imageFilePath)
     connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
     connect(_viewScene, SIGNAL(boxSelected(QRect, QString)), this, SLOT(updateBoxInfo(QRect, QString)));
     connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
+//    connect(this, SIGNAL(isDrawing(bool)), _viewScene, SLOT(drawingBoxRect(bool)));
 
     _viewScene->loadImage(imageFilePath);
-    isImageLoaded = true;
+    _isImageLoaded = true;
 
     _undoGroup->addStack(_viewScene->undoStack());
     _undoGroup->setActiveStack(_viewScene ? _viewScene->undoStack() : 0);
 
-    imageView->setScene(_viewScene);
+    _imageView->setScene(_viewScene);
 
-    fitToWindowAct->setChecked(true);
+    _fitToWindowAct->setChecked(true);
     fitViewToWindow();
 }
 
@@ -470,15 +502,15 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             // use Key_Down and Key_Up received by _viewScene and MainWindow to select image in fileListView
             if (keyEvent->key() == Qt::Key_Down || keyEvent->key() == Qt::Key_Up ) {
 //                qApp->sendEvent(fileListView, event);
-                int rowCount = fileListModel->rowCount(fileListView->rootIndex());
-                int currentRow = fileListView->currentIndex().row();
+                int rowCount = _fileListModel->rowCount(_fileListView->rootIndex());
+                int currentRow = _fileListView->currentIndex().row();
                 if (keyEvent->key() == Qt::Key_Down) {
                     currentRow = qMin(rowCount-1, currentRow+1);
                 } else if (keyEvent->key() == Qt::Key_Up) {
                     currentRow = qMax(0, currentRow-1);
                 }
-                QModelIndex index = fileListModel->index(currentRow,  0, fileListView->rootIndex());
-                fileListView->setCurrentIndex(index);
+                QModelIndex index = _fileListModel->index(currentRow,  0, _fileListView->rootIndex());
+                _fileListView->setCurrentIndex(index);
                 return true;
             }
         }
@@ -489,44 +521,66 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     }
 }
 
-void MainWindow::editTargetType()
+void MainWindow::drawBoxRect()
 {
-    TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &translator);
+    if (_panAct->isChecked())
+        _panAct->setChecked(false);
+    _viewScene->drawingBoxRect(_drawAct->isChecked());
+}
+
+void MainWindow::editTypeNames()
+{
+    TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &_translator);
     int r = d->exec();
     if (r == QDialog::Accepted) {
         delete d;
     }
 }
 
-void MainWindow::zoomIn()
+void MainWindow::pan()
 {
-    if (!isImageLoaded)
+//    _drawAct->setCheckable(false);
+    if (!_isImageLoaded)
         return;
 
-    if (fitToWindowAct->isChecked())
-        fitToWindowAct->setChecked(false);
+    if (_fitToWindowAct->isChecked())
+        _fitToWindowAct->setChecked(false);
+
+    if (_drawAct->isChecked())
+        _drawAct->setChecked(false);
+
+    _viewScene->panImage(_panAct->isChecked());
+}
+
+void MainWindow::zoomIn()
+{
+    if (!_isImageLoaded)
+        return;
+
+    if (_fitToWindowAct->isChecked())
+        _fitToWindowAct->setChecked(false);
 
     _viewScene->setViewZoom(_viewScene->viewZoom() * 1.2);
 }
 
 void MainWindow::zoomOut()
 {
-    if (!isImageLoaded)
+    if (!_isImageLoaded)
         return;
 
-    if (fitToWindowAct->isChecked())
-        fitToWindowAct->setChecked(false);
+    if (_fitToWindowAct->isChecked())
+        _fitToWindowAct->setChecked(false);
 
     _viewScene->setViewZoom(_viewScene->viewZoom() * 0.8);
 }
 
 void MainWindow::wheelEvent(QWheelEvent *event)
 {
-    if (!isImageLoaded)
+    if (!_isImageLoaded)
         return;
 
-    if (fitToWindowAct->isChecked())
-        fitToWindowAct->setChecked(false);
+    if (_fitToWindowAct->isChecked())
+        _fitToWindowAct->setChecked(false);
 
     auto oldZoom = _viewScene->viewZoom();
     auto newZoom = oldZoom + (event->delta() / 120.0) * 0.05;
@@ -535,21 +589,23 @@ void MainWindow::wheelEvent(QWheelEvent *event)
 
 void MainWindow::fitViewToWindow()
 {
-    if (!isImageLoaded)
+    if (!_isImageLoaded)
         return;
-    if (!fitToWindowAct->isChecked())
+    if (!_fitToWindowAct->isChecked())
         return;
+    if (_panAct->isChecked())
+        _panAct->setChecked(false);
 
-    _viewScene->setViewZoom(imageView->width() - 2, imageView->height() - 2);
+    _viewScene->setViewZoom(_imageView->width() - 2, _imageView->height() - 2);
 }
 
 void MainWindow::fitViewToActual()
 {
-    if (!isImageLoaded)
+    if (!_isImageLoaded)
         return;
 
-    if (fitToWindowAct->isChecked())
-        fitToWindowAct->setChecked(false);
+    if (_fitToWindowAct->isChecked())
+        _fitToWindowAct->setChecked(false);
 
     _viewScene->setViewZoom(1);
 }
@@ -558,7 +614,7 @@ void MainWindow::fullScreen()
 {
     auto makeFullscreen = !isFullScreen();
 
-    fileListView->setVisible(!makeFullscreen);
+    _fileListView->setVisible(!makeFullscreen);
     setWindowState(makeFullscreen ? Qt::WindowFullScreen : Qt::WindowMaximized);
 }
 
