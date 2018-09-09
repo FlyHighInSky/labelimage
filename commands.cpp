@@ -59,26 +59,47 @@ void RemoveBoxesCommand::redo()
 ** SetTargetTypeCommand
 */
 
-SetTargetTypeCommand::SetTargetTypeCommand(QGraphicsScene *scene, BoxItem *box, const QString &typeName,
+//SetTargetTypeCommand::SetTargetTypeCommand(QGraphicsScene *scene, BoxItem *box, const QString &typeName,
+//                                             QUndoCommand *parent)
+SetTargetTypeCommand::SetTargetTypeCommand(QGraphicsScene *scene, QList<BoxItem *> *boxList, const QString &typeName,
                                              QUndoCommand *parent)
     : QUndoCommand(parent)
 {
     _scene = scene;
-    _box = box;
-    _oldName = _box->typeName();
+//    _box = box;
+    _boxList = new QList<BoxItem *>();
+    for (int i=0; i<boxList->count(); i++) {
+        BoxItem *box = boxList->at(i);
+        _boxList->append(box);
+    }
+    _oldNameList = new QStringList();
+    for (int i=0; i<boxList->count(); i++) {
+        _oldNameList->append(boxList->at(i)->typeName());
+    }
+//    _oldName = _box->typeName();
     _newName = typeName;
 }
 
 void SetTargetTypeCommand::undo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
-    _box->setTypeName(_oldName);
+//    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
+//    _box->setTypeName(_oldName);
+    for (int i=0; i<_boxList->count(); i++) {
+        BoxItem *item = _boxList->at(i);
+        item->setTypeName(_oldNameList->at(i));
+    }
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_boxList, true);
 }
 
 void SetTargetTypeCommand::redo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
-    _box->setTypeName(_newName);
+//    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
+//    _box->setTypeName(_newName);
+    for (int i=0; i<_boxList->count(); i++) {
+        BoxItem *item = _boxList->at(i);
+        item->setTypeName(_newName);
+    }
+    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_boxList, true);
 }
 
 /******************************************************************************

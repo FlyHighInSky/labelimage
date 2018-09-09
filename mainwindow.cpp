@@ -25,8 +25,6 @@ MainWindow::MainWindow()
     createCentralWindow();
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
     this->installEventFilter(this);
-    _fileListView->installEventFilter(this);
-    _imageView->installEventFilter(this);
 
     _languageFile = ":/languages/zh_CN.qm";
     _translator.load(_languageFile);
@@ -72,9 +70,12 @@ void MainWindow::openFolder()
         _typeNameList = loadTypeNameFromFile(_typeNameFile);
         _editAct->setEnabled(true);
         if (_typeNameList.count() <= 0) {
-            editTypeNames();
+            editTypeNameList();
             _typeNameList = loadTypeNameFromFile(_typeNameFile);
         }
+
+        // add type name on combobox
+        _typeNameComboBox->addItems(_typeNameList);
 
         // set the first image selected.
         QModelIndex index = _fileListModel->index(0, 0, _fileListView->rootIndex());
@@ -158,14 +159,22 @@ void MainWindow::createActions()
     _drawAct->setCheckable(true);
     _drawAct->setChecked(false);
 
-    // edit target type
+    // edit type name
     _editAct = new QAction(QIcon(":/images/edit.png"), tr("&Target Type"), this);
     _editAct->setShortcut(tr("Ctrl+T"));
     _editAct->setStatusTip(tr("Edit Target Type"));
-    connect(_editAct, &QAction::triggered, this, &MainWindow::editTypeNames);
+    connect(_editAct, &QAction::triggered, this, &MainWindow::editTypeNameList);
     _editMenu->addAction(_editAct);
     _editToolBar->addAction(_editAct);
     _editAct->setEnabled(false);
+
+    // target type combobox
+    _typeNameComboBox = new QComboBox(this);//(tr("<None Name>"), this);
+//    _targetTypeCombobox->setStatusTip(tr("Select Target Type"));
+//    _editMenu->addAction(_targetTypeCombobox);
+    _editToolBar->addWidget(_typeNameComboBox);
+    _typeNameComboBox->installEventFilter(this);
+//    _editAct->setEnabled(false);
 
     _undoGroup = new QUndoGroup(this);
     // undo
@@ -421,7 +430,6 @@ void MainWindow::createCentralWindow()
     _imageView = new QGraphicsView(this);
     _imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
-
     _mainSplitter = new QSplitter(Qt::Horizontal, _centralWidget);
     _mainSplitter->addWidget(_fileListView);
     _mainSplitter->addWidget(_imageView);
@@ -470,11 +478,13 @@ void MainWindow::displayImageView(QString imageFilePath)
     }
     _viewScene = new ViewScene(this);
     _viewScene->setTypeNameList(_typeNameList);
+    _viewScene->setTypeName(_typeNameComboBox->currentText());
 
     _viewScene->installEventFilter(this);
     connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
     connect(_viewScene, SIGNAL(boxSelected(QRect, QString)), this, SLOT(updateBoxInfo(QRect, QString)));
     connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
+    connect(_typeNameComboBox, SIGNAL(activated(QString)), _viewScene, SLOT(changeBoxTypeName(QString)));
 //    connect(this, SIGNAL(isDrawing(bool)), _viewScene, SLOT(drawingBoxRect(bool)));
 
     _viewScene->loadImage(imageFilePath);
@@ -496,7 +506,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj == _viewScene || obj == this) {
+    if (obj == _viewScene || obj == _typeNameComboBox || obj == this) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             // use Key_Down and Key_Up received by _viewScene and MainWindow to select image in fileListView
@@ -528,7 +538,7 @@ void MainWindow::drawBoxRect()
     _viewScene->drawingBoxRect(_drawAct->isChecked());
 }
 
-void MainWindow::editTypeNames()
+void MainWindow::editTypeNameList()
 {
     TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &_translator);
     int r = d->exec();
@@ -638,6 +648,7 @@ void MainWindow::updateBoxInfo(QRect rect, QString typeName)
                            .arg(_boxRect.height())
                            .arg(_boxTypeName)
                            .toUtf8());
+    _typeNameComboBox->setCurrentText(_boxTypeName);
 }
 
 void MainWindow::updateLabelCursorPos(QPointF cursorPos)

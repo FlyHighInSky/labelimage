@@ -74,6 +74,7 @@ class QMenu;
 class QScrollArea;
 class QScrollBar;
 class QDirModel;
+class QComboBox;
 QT_END_NAMESPACE
 
 //! [0]
@@ -90,7 +91,7 @@ private slots:
     void zoomIn();
     void zoomOut();
     void drawBoxRect();
-    void editTypeNames();
+    void editTypeNameList();
     void fitViewToWindow();
     void fitViewToActual();
     void fullScreen();
@@ -148,6 +149,7 @@ private:
     QToolBar *_editToolBar;
     QAction *_drawAct;
     QAction *_editAct;
+    QComboBox *_typeNameComboBox;
     QAction *_undoAct;
     QAction *_redoAct;
     QUndoGroup *_undoGroup;

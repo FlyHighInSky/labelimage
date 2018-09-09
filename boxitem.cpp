@@ -249,6 +249,7 @@ QRect BoxItem::getRealRect()
 void BoxItem::setTypeName(QString name)
 {
     _typeName = name;
+    emit boxSelected(getRealRect(), _typeName);
     this->update();
 }
 
@@ -422,7 +423,6 @@ void BoxItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         QString name = selectedAction->text();
         if (_typeNameList.contains(name)) {
             emit typeNameChanged(name);
-            emit boxSelected(getRealRect(), name);
         }
     }
 }

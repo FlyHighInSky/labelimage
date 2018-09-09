@@ -39,6 +39,10 @@ public:
     {
         _typeNameList = list;
     }
+    void setTypeName (const QString &name)
+    {
+        _typeName = name;
+    }
     QUndoStack *undoStack() const
     {
         return _undoStack;
@@ -52,8 +56,9 @@ public:
     void drawingBoxRect(bool op);
     void panImage(bool op);
 
-private slots:
+public slots:
     void changeBoxTypeName(QString name);
+private slots:
     void moveBox(QRectF newRect, QRectF oldRect);
 
 signals:
@@ -75,6 +80,7 @@ private:
     QImage *_image;
     QGraphicsPixmapItem *_pixmapItem = nullptr;
     BoxItem* _boxItem = nullptr;//, *_selectedBoxItem;
+    QString _typeName;
     QStringList _typeNameList;
     double _zoomFactor = 1;
     QPointF _dragStart, _dragEnd;

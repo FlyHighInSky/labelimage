@@ -177,13 +177,13 @@ void ViewScene::deleteBoxItems()
     QList<BoxItem *> *boxList = new QList<BoxItem *>();
     foreach (QGraphicsItem *item, this->selectedItems()) {
         if (item->type() == QGraphicsItem::UserType+1) {
-            //            this->removeItem(item);
-            //            delete item;
             BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
             boxList->append(b);
         }
     }
-    _undoStack->push(new RemoveBoxesCommand(this, boxList));
+
+    if (boxList->count() > 0)
+        _undoStack->push(new RemoveBoxesCommand(this, boxList));
     delete boxList;
 }
 
@@ -299,6 +299,12 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
             }
         } else {
             if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
+                foreach (QGraphicsItem *item, this->items()) {
+                    if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
+                        item->setSelected(true);
+                        break;
+                    }
+                }
                 QGraphicsScene::mousePressEvent(event);
             } else if (_isPanning) { // pan image
                     selectBoxItems(false);
@@ -307,8 +313,7 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
             } else {// selecting single box item
                 foreach (QGraphicsItem *item, this->items()) {
                     if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
-                        if (!item->isSelected())
-                            selectBoxItems(false);
+                        selectBoxItems(qgraphicsitem_cast<BoxItem *>(item), true);
                         _isMoving = true;
                         QGraphicsScene::mousePressEvent(event);
                         break;
@@ -336,7 +341,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if(_isDrawing && (this->selectedItems().count() <= 0 || _boxItem) && !_isMoving && !_isPanning) {
             this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
             if(!_boxItem) {
-                _boxItem = new BoxItem(this->sceneRect(), _image->size(), _typeNameList, _typeNameList.at(0));
+                _boxItem = new BoxItem(this->sceneRect(), _image->size(), _typeNameList, _typeName);
                 this->registerItem(_boxItem);
                 this->addItem(_boxItem);
             }
@@ -459,7 +464,18 @@ void ViewScene::setViewZoom(int w, int h)
 
 void ViewScene::changeBoxTypeName(QString name)
 {
-    _undoStack->push(new SetTargetTypeCommand(this, reinterpret_cast<BoxItem *>(QObject::sender()), name));
+    _typeName = name;
+    QList<BoxItem *> *boxList = new QList<BoxItem *>();
+    foreach (QGraphicsItem *item, this->selectedItems()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
+            boxList->append(b);
+        }
+    }
+
+    if (boxList->count() > 0)
+        _undoStack->push(new SetTargetTypeCommand(this, boxList, name));
+    delete boxList;
 }
 
 void ViewScene::moveBox(QRectF newRect, QRectF oldRect)

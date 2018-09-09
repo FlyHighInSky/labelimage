@@ -39,16 +39,29 @@ private:
 class SetTargetTypeCommand : public QUndoCommand
 {
 public:
-    SetTargetTypeCommand(QGraphicsScene *scene, BoxItem *box, const QString &typeName,
+//    SetTargetTypeCommand(QGraphicsScene *scene, BoxItem *box, const QString &typeName,
+//                            QUndoCommand *parent = 0);
+    SetTargetTypeCommand(QGraphicsScene *scene, QList<BoxItem *> *boxList, const QString &typeName,
                             QUndoCommand *parent = 0);
 
+    ~SetTargetTypeCommand()
+    {
+        if (_boxList) {
+            delete _boxList;
+        }
+        if (_oldNameList) {
+            delete _oldNameList;
+        }
+    }
     void undo() override;
     void redo() override;
 
 private:
     QGraphicsScene *_scene;
     QString _oldName, _newName;
-    BoxItem *_box;
+//    BoxItem *_box;
+    QList<BoxItem *> *_boxList = nullptr;
+    QStringList *_oldNameList = nullptr;
 };
 
 class MoveBoxCommand : public QUndoCommand
