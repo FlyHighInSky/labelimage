@@ -28,9 +28,8 @@ public:
     }
 
     void loadImage(QString path);
-    double viewZoom() const;
-    void setViewZoom(int w, int h);
-    void setViewZoom(double zoom);
+//    void setViewZoom(int w, int h);
+//    void setViewZoom(double zoom);
     void saveToFile(const QString& path);
     void clear();
 
@@ -54,7 +53,7 @@ public:
     void selectBoxItems(bool op);
     void registerItem(BoxItem *b);
     void drawingBoxRect(bool op);
-    void panImage(bool op);
+//    void panImage(bool op);
 
 public slots:
     void changeBoxTypeName(QString name);
@@ -67,7 +66,6 @@ signals:
     void boxSelected(QRect boxRect, QString typeName);
 
 protected:
-    void drawView();
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
@@ -75,6 +73,7 @@ protected:
     void keyPressEvent(QKeyEvent *keyEvent);
     void keyReleaseEvent(QKeyEvent *keyEvent);
     void deleteBoxItems();
+//    void setTopmost(QGraphicsItem *item);
 //    bool eventFilter(QObject *obj, QEvent *event);
 private:
     QImage *_image;
@@ -90,7 +89,7 @@ private:
     bool _isMouseMoved = false;
     QPointF _leftTopPoint;
     QPointF _rightBottomPoint;
-    QString _labelFilePath;
+    QString _boxItemFileName;
     QUndoStack *_undoStack;
     QCursor _oldCursor = Qt::ArrowCursor;
     void loadBoxItemsFromFile();

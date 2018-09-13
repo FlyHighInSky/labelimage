@@ -88,13 +88,18 @@ void ViewScene::loadImage(QString filename)
 
     emit imageLoaded(_image->size());
 
+    setSceneRect(_image->rect());
+
+    // load box items
     QFileInfo info(filename);
-    _labelFilePath = info.path() + "/" + info.completeBaseName() + ".txt";
+    _boxItemFileName = info.path() + "/" + info.completeBaseName() + ".txt";
+    loadBoxItemsFromFile();
+    isImageLoaded = true;
 }
 
 void ViewScene::loadBoxItemsFromFile()
 {
-    QFile file(_labelFilePath);
+    QFile file(_boxItemFileName);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
 
     QPoint zero(0, 0);
@@ -132,7 +137,7 @@ void ViewScene::registerItem(BoxItem *b)
 
 void ViewScene::saveBoxItemsToFile()
 {
-    QFile file(_labelFilePath);
+    QFile file(_boxItemFileName);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     qreal label[4];
     QTextStream out(&file);
@@ -149,27 +154,6 @@ void ViewScene::saveBoxItemsToFile()
         }
     }
     file.close();
-}
-
-void ViewScene::drawView()
-{
-    QPoint zero(0, 0);
-    QRect rect(zero, _image->size() * _zoomFactor);
-    setSceneRect(rect);
-
-    if (!isImageLoaded) {
-        loadBoxItemsFromFile();
-        isImageLoaded = true;
-    }
-
-    foreach (QGraphicsItem *item, this->items()) {
-        if (item->type() == QGraphicsItem::UserType+1) {
-            BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
-            b->setScale(this->sceneRect());
-        } else if (item->type() == QGraphicsPixmapItem::Type) {
-            item->setScale(_zoomFactor);
-        }
-    }
 }
 
 void ViewScene::deleteBoxItems()
@@ -221,26 +205,47 @@ void ViewScene::drawingBoxRect(bool op)
 {
     _isDrawing = op;
     _isPanning = false;
-    if (_isDrawing) {
-        _oldCursor = this->views().at(0)->viewport()->cursor();
-        this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
-    } else {
-        this->views().at(0)->viewport()->setCursor(_oldCursor);
+    //    if (_isDrawing) {
+    //        this->_pixmapItem->setCursor(Qt::CrossCursor);
+    //    } else {
+    //        this->_pixmapItem->setCursor(Qt::ArrowCursor);
+    //    }
+    //    if (_isDrawing) {
+    //        _oldCursor = this->views().at(0)->viewport()->cursor();
+    //        this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
+    //    } else {
+    //        this->views().at(0)->viewport()->setCursor(_oldCursor);
+    //    }
+    QCursor c = _isDrawing ? Qt::CrossCursor : Qt::ArrowCursor;
+    //    _pixmapItem->setCursor(c);
+
+    foreach (QGraphicsItem *item, this->items()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            qgraphicsitem_cast<BoxItem *>(item)->setOldCursor(c);
+        }
     }
 }
 
-void ViewScene::panImage(bool op)
-{
-    _isPanning = op;
-    _isDrawing = false;
-    selectBoxItems(false);
-    if (_isPanning) {
-        _oldCursor = this->views().at(0)->viewport()->cursor();
-        this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
-    } else {
-        this->views().at(0)->viewport()->setCursor(_oldCursor);
-    }
-}
+//void ViewScene::panImage(bool op)
+//{
+//    _isPanning = op;
+//    _isDrawing = false;
+//    selectBoxItems(false);
+////    if (_isPanning) {
+////        _oldCursor = this->views().at(0)->viewport()->cursor();
+////        this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
+////    } else {
+////        this->views().at(0)->viewport()->setCursor(_oldCursor);
+////    }
+//}
+
+//void ViewScene::setTopmost(QGraphicsItem *item)
+//{
+//    QList<QGraphicsItem *> list = collidingItems(item);
+//    foreach (QGraphicsItem *it, list) {
+//        it->stackBefore(item);
+//    }
+//}
 
 void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
@@ -258,7 +263,7 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         //        }
         _leftTopPoint = event->scenePos();
         if (_isDrawing && event->modifiers() != Qt::ControlModifier) { // drawing box item
-            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
+            //            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
 
             // no box selected
             int count = 0;
@@ -307,9 +312,9 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 }
                 QGraphicsScene::mousePressEvent(event);
             } else if (_isPanning) { // pan image
-                    selectBoxItems(false);
-                    _dragStart = event->scenePos();
-                    return;
+                selectBoxItems(false);
+                _dragStart = event->scenePos();
+                return;
             } else {// selecting single box item
                 foreach (QGraphicsItem *item, this->items()) {
                     if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
@@ -339,7 +344,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         // add new box item
         if(_isDrawing && (this->selectedItems().count() <= 0 || _boxItem) && !_isMoving && !_isPanning) {
-            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
+            //            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
             if(!_boxItem) {
                 _boxItem = new BoxItem(this->sceneRect(), _image->size(), _typeNameList, _typeName);
                 this->registerItem(_boxItem);
@@ -371,7 +376,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         // pan scene
         if (_isPanning) {
-            this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
+            //            this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
             QScrollBar *h = this->views().at(0)->horizontalScrollBar();
             h->setValue(h->value() - (int)(event->scenePos().x() - _dragStart.x()));
             QScrollBar *v = this->views().at(0)->verticalScrollBar();
@@ -419,8 +424,8 @@ void ViewScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
     {
         _isPanning = true;
         _dragStart = mouseEvent->scenePos();
-        _oldCursor = this->views().at(0)->viewport()->cursor();
-        this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
+        //        _oldCursor = this->views().at(0)->viewport()->cursor();
+        //        this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
     }
     QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
 }
@@ -441,26 +446,18 @@ void ViewScene::keyReleaseEvent(QKeyEvent *keyEvent)
     QGraphicsScene::keyReleaseEvent(keyEvent);
 }
 
-/**
- * @brief Returns current preview zoom of image.
- */
-double ViewScene::viewZoom() const
-{
-    return _zoomFactor;
-}
+//void ViewScene::setViewZoom(double zoom)
+//{
+//    _zoomFactor = zoom;
+//    drawView();
+//}
 
-void ViewScene::setViewZoom(double zoom)
-{
-    _zoomFactor = zoom;
-    drawView();
-}
-
-void ViewScene::setViewZoom(int w, int h)
-{
-    QSize size = _image->size();
-    _zoomFactor = std::min(1.0 * w / size.width(), 1.0 * h / size.height());
-    drawView();
-}
+//void ViewScene::setViewZoom(int w, int h)
+//{
+//    QSize size = _image->size();
+//    _zoomFactor = std::min(1.0 * w / size.width(), 1.0 * h / size.height());
+//    drawView();
+//}
 
 void ViewScene::changeBoxTypeName(QString name)
 {

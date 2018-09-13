@@ -17,14 +17,25 @@ BoxItem::BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameL
     _imageSize(imageSize)
 {
     _textRect.setDefaultTextColor(QColor(255,255,255,255));
+    _textRect.setFlag(QGraphicsItem::ItemIgnoresTransformations);
     _textRect.setParentItem(this);
     _textName.setDefaultTextColor(QColor(255,255,255,255));
+    _textName.setFlag(QGraphicsItem::ItemIgnoresTransformations);
     _textName.setParentItem(this);
-    _pen.setWidth(2);
-    _pen.setColor(_color);
-    this->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable);
+    this->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable);
     this->setAcceptHoverEvents(true);
     initContextMenu();
+}
+
+void BoxItem::setTopmost()
+{
+    QList<QGraphicsItem *> list = collidingItems(Qt::IntersectsItemBoundingRect);
+    qreal maxZVal = 0;
+    foreach (QGraphicsItem *it, list) {
+        maxZVal = qMax(maxZVal, it->zValue());
+    }
+    if (this->zValue() <= maxZVal)
+        this->setZValue(maxZVal+1);
 }
 
 void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
@@ -33,6 +44,8 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
     switch (event->buttons()) {
     case Qt::LeftButton:
         if (this->isSelected()) {
+            setTopmost();
+//            _oldCursor = this->cursor();
             _selectedGrabber = getSelectedGrabber(event->pos());
             setGrabberCursor(_selectedGrabber);
 
@@ -107,14 +120,18 @@ void BoxItem::mouseMoveEvent ( QGraphicsSceneMouseEvent * event )
 
 void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent *event )
 {
+    event->setAccepted(true);
     if (this->isSelected()){
-        this->setCursor(Qt::ArrowCursor);
+//        this->setCursor(Qt::ArrowCursor);
+        this->setCursor(_oldCursor);
     }
 }
 
 void BoxItem::hoverEnterEvent ( QGraphicsSceneHoverEvent *event )
 {
+    event->setAccepted(true);
     if (this->isSelected()){
+        _oldCursor = this->cursor();
         _selectedGrabber = getSelectedGrabber(event->pos());
         setGrabberCursor(_selectedGrabber);
     }
@@ -122,6 +139,7 @@ void BoxItem::hoverEnterEvent ( QGraphicsSceneHoverEvent *event )
 
 void BoxItem::hoverMoveEvent ( QGraphicsSceneHoverEvent *event )
 {
+    event->setAccepted(true);
     if (this->isSelected()){
         _selectedGrabber = getSelectedGrabber(event->pos());
         setGrabberCursor(_selectedGrabber);
@@ -224,7 +242,7 @@ void BoxItem::setRect(const QRectF &rect)
             _rect = rect.intersected(_boundingRect);
         }
     }
-    setGrabbers();
+    setGrabbers(_grabberWidth, _grabberHeight);
 
     qreal halfpw = (_pen.style() == Qt::NoPen) ? qreal(0) : _pen.widthF() / 2;
     if (halfpw > 0.0)
@@ -260,15 +278,17 @@ QRectF BoxItem::boundingRect() const
 
 void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    double scaleValue = scale()/painter->transform().m11();
+    _pen.setWidthF(_penWidth*scaleValue);
+    _pen.setColor(_color);
     _pen.setStyle(Qt::SolidLine);
     painter->setPen(_pen);
 
-    // draw the top box, the visible one
     QBrush brush(QColor(255,0,0,0), Qt::SolidPattern);
-
     painter->setBrush(brush);
 
     if (option->state & QStyle::State_Selected) {
+        setGrabbers(_grabberWidth*scaleValue, _grabberHeight*scaleValue);
         for (int i=TopLeft; i<=LeftCenter; i++) {
             painter->fillRect(_grabbers[i], QColor(255, 0, 0, 255));
         }
@@ -276,12 +296,10 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->drawRect(_rect);
 
     _textRect.setPos(_rect.topLeft());
-
     QRect r = getRealRect();
     QString rectInfo = QString("[%1,%2,%3,%4]")
             .arg(r.left()).arg(r.top())
             .arg(r.width()).arg(r.height());
-
     _textRect.setPlainText(rectInfo);
 
     _textName.setPos(_rect.bottomLeft());
@@ -314,7 +332,6 @@ GrabberID BoxItem::getSelectedGrabber(QPointF point)
     return ID;
 }
 
-// 设置鼠标停在拖拽定点处的样式;
 void BoxItem::setGrabberCursor(GrabberID id)
 {
     switch (id)
@@ -343,20 +360,20 @@ void BoxItem::setGrabberCursor(GrabberID id)
     }
 }
 
-void BoxItem::setGrabbers()
+void BoxItem::setGrabbers(qreal width, qreal height)
 {
-    int w = _grabberWidth/2, h = _grabberHeight/2;
+    int w = width/2, h = height/2;
 
     // drawingRegion contains rect and 8 grabbers
-    _grabbers[TopLeft     ].setRect(_rect.left()-w,     _rect.top()-h,       _grabberWidth, _grabberHeight);
-    _grabbers[TopRight    ].setRect(_rect.right()-w,    _rect.top()-h,       _grabberWidth, _grabberHeight);
-    _grabbers[BottomLeft  ].setRect(_rect.left()-w,     _rect.bottom()-h,    _grabberWidth, _grabberHeight);
-    _grabbers[BottomRight ].setRect(_rect.right()-w,    _rect.bottom()-h,    _grabberWidth, _grabberHeight);
+    _grabbers[TopLeft     ].setRect(_rect.left()-w,     _rect.top()-h,       width, height);
+    _grabbers[TopRight    ].setRect(_rect.right()-w,    _rect.top()-h,       width, height);
+    _grabbers[BottomLeft  ].setRect(_rect.left()-w,     _rect.bottom()-h,    width, height);
+    _grabbers[BottomRight ].setRect(_rect.right()-w,    _rect.bottom()-h,    width, height);
 
-    _grabbers[LeftCenter  ].setRect(_rect.left()-w,         _rect.center().y()-h,    _grabberWidth, _grabberHeight);
-    _grabbers[RightCenter ].setRect(_rect.right()-w,        _rect.center().y()-h,    _grabberWidth, _grabberHeight);
-    _grabbers[TopCenter   ].setRect(_rect.center().x()-w,   _rect.top()-h,           _grabberWidth, _grabberHeight);
-    _grabbers[BottomCenter].setRect(_rect.center().x()-w,   _rect.bottom()-h,        _grabberWidth, _grabberHeight);
+    _grabbers[LeftCenter  ].setRect(_rect.left()-w,         _rect.center().y()-h,    width, height);
+    _grabbers[RightCenter ].setRect(_rect.right()-w,        _rect.center().y()-h,    width, height);
+    _grabbers[TopCenter   ].setRect(_rect.center().x()-w,   _rect.top()-h,           width, height);
+    _grabbers[BottomCenter].setRect(_rect.center().x()-w,   _rect.bottom()-h,        width, height);
 
     // cut the grabber size, if intersection exists.
     if (_rect.left() == _sceneRect.left()) {

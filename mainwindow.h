@@ -87,10 +87,10 @@ public:
 
 private slots:
     void openFolder();
-    void pan();
+    void pan(bool op);
     void zoomIn();
     void zoomOut();
-    void drawBoxRect();
+    void drawBoxRect(bool checked);
     void editTypeNameList();
     void fitViewToWindow();
     void fitViewToActual();
@@ -102,6 +102,7 @@ private slots:
     void updateLabelCursorPos(QPointF cursorPos);
     void updateBoxInfo(QRect rect, QString typeName);
     void switchLanguage();
+    void saveImageNamesToFile(const QString fileName);
 //signals:
 //    void isDrawing(bool op);
 

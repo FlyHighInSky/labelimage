@@ -68,6 +68,10 @@ public:
     }
     QRectF _oldRect;
 
+    void setOldCursor(QCursor c)
+    {
+        _oldCursor = c;
+    }
     enum { Type = UserType + 1 };
     int type() const
     {
@@ -97,13 +101,14 @@ private:
     virtual void mouseMoveEvent(QGraphicsSceneDragDropEvent *event);
     virtual void mousePressEvent(QGraphicsSceneDragDropEvent *event);
 
-    void setGrabbers();
+    void setGrabbers(qreal width, qreal height);
     void initContextMenu();
     GrabberID getSelectedGrabber(QPointF point);
     void setGrabberCursor(GrabberID stretchRectState);
     QRectF calculateMoveRect(QPointF dragStart, QPointF dragEnd);
     QRectF calculateStretchRect(QPointF dragStart, QPointF dragEnd);
     QRect getRealRect();
+    void setTopmost();
 
     TaskStatus _taskStatus = Waiting;
     bool _isMouseMoved = false;
@@ -117,8 +122,10 @@ private:
     QStringList _typeNameList;
     QString _typeName;
 
+    QCursor _oldCursor;
     QMenu _contextMenu;
     QColor _color;
+    qreal _penWidth = 2;
     QPen _pen;
 
     int _grabberWidth;
