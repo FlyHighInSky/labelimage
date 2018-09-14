@@ -121,6 +121,7 @@ void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent *event )
     event->setAccepted(true);
     if (this->isSelected()){
         QApplication::setOverrideCursor(_oldCursor);
+//        setCursor(_oldCursor);
     }
 }
 
@@ -356,6 +357,7 @@ void BoxItem::setGrabberCursor(GrabberID id)
         break;
     }
     QApplication::setOverrideCursor(c);
+//    setCursor(c);
 }
 
 void BoxItem::setGrabbers(qreal width, qreal height)

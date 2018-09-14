@@ -52,8 +52,8 @@ public:
     void selectBoxItems(BoxItem *box, bool op);
     void selectBoxItems(bool op);
     void registerItem(BoxItem *b);
-    void drawingBoxRect(bool op);
-//    void panImage(bool op);
+    void drawBoxItem(bool op);
+    void panImage(bool op);
 
 public slots:
     void changeBoxTypeName(QString name);

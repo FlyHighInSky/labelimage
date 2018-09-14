@@ -198,7 +198,7 @@ void CustomScene::selectBoxItems(QList<BoxItem *> *boxList, bool op)
     }
 }
 
-void CustomScene::drawingBoxRect(bool op)
+void CustomScene::drawBoxItem(bool op)
 {
     _isDrawing = op;
     _isPanning = false;
@@ -209,6 +209,12 @@ void CustomScene::drawingBoxRect(bool op)
             qgraphicsitem_cast<BoxItem *>(item)->setOldCursor(c);
         }
     }
+}
+
+void CustomScene::panImage(bool op)
+{
+    _isDrawing = false;
+    _isPanning = op;
 }
 
 void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event)

@@ -504,6 +504,7 @@ void MainWindow::displayImageView(QString imageFilePath)
     connect(_imageScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
     connect(_typeNameComboBox, SIGNAL(activated(QString)), _imageScene, SLOT(changeBoxTypeName(QString)));
 
+    _imageScene->loadImage(imageFilePath);
     _isImageLoaded = true;
 
     _undoGroup->addStack(_imageScene->undoStack());
@@ -515,8 +516,7 @@ void MainWindow::displayImageView(QString imageFilePath)
     fitViewToWindow();
 
     // init drawing status from _drawAct
-    _imageScene->drawingBoxRect(_drawAct->isChecked());
-    _imageScene->loadImage(imageFilePath);
+    _imageScene->drawBoxItem(_drawAct->isChecked());
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -556,7 +556,7 @@ void MainWindow::drawBoxRect(bool checked)
         _panAct->setChecked(false);
     }
     _imageView->updateCursor(checked);
-    _imageScene->drawingBoxRect(checked);
+    _imageScene->drawBoxItem(checked);
 }
 
 void MainWindow::editTypeNameList()
@@ -579,11 +579,13 @@ void MainWindow::pan(bool op)
     if (_drawAct->isChecked())
         _drawAct->setChecked(false);
 
-    if (op) {
-        _imageView->setDragMode(QGraphicsView::ScrollHandDrag);
-    } else {
-        _imageView->setDragMode(QGraphicsView::NoDrag);
-    }
+//    if (op) {
+//        _imageView->setDragMode(QGraphicsView::ScrollHandDrag);
+//    } else {
+//        _imageView->setDragMode(QGraphicsView::NoDrag);
+//    }
+    _imageView->panImage(op);
+    _imageScene->panImage(op);
 }
 
 void MainWindow::zoomIn()
