@@ -8,7 +8,6 @@ CustomScene::CustomScene(QObject* parent):
     _pixmapItem(nullptr),
     _boxItem(nullptr),
     _isDrawing(false),
-    isImageLoaded(false),
     _undoStack(new QUndoStack)
 {
 }
@@ -16,7 +15,6 @@ CustomScene::CustomScene(QObject* parent):
 void CustomScene::clear()
 {
     saveBoxItemsToFile();
-    isImageLoaded = false;
 
     if (_image != nullptr) {
         delete _image;
@@ -93,7 +91,6 @@ void CustomScene::loadImage(QString filename)
     QFileInfo info(filename);
     _boxItemFileName = info.path() + "/" + info.completeBaseName() + ".txt";
     loadBoxItemsFromFile();
-    isImageLoaded = true;
 }
 
 void CustomScene::loadBoxItemsFromFile()
@@ -165,8 +162,11 @@ void CustomScene::deleteBoxItems()
         }
     }
 
-    if (boxList->count() > 0)
+    if (boxList->count() > 0) {
         _undoStack->push(new RemoveBoxesCommand(this, boxList));
+        QApplication::setOverrideCursor(boxList->at(0)->oldCursor());
+    }
+
     delete boxList;
 }
 
@@ -202,38 +202,21 @@ void CustomScene::drawBoxItem(bool op)
 {
     _isDrawing = op;
     _isPanning = false;
-    QCursor c = _isDrawing ? Qt::CrossCursor : Qt::ArrowCursor;
-
-    foreach (QGraphicsItem *item, this->items()) {
-        if (item->type() == QGraphicsItem::UserType+1) {
-            qgraphicsitem_cast<BoxItem *>(item)->setOldCursor(c);
-        }
-    }
 }
 
 void CustomScene::panImage(bool op)
 {
     _isDrawing = false;
     _isPanning = op;
+    selectBoxItems(false);
 }
 
 void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     switch (event->buttons()) {
     case Qt::LeftButton:
-        //        if (event->modifiers() == Qt::ShiftModifier) { // drawing box item
-        //            selectBoxItems(false); // deselect all the other box items
-        //            _leftTopPoint = event->scenePos();
-        //            _isDrawing = true;
-        //        } else if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
-        //            QGraphicsScene::mousePressEvent(event);
-        //        } else { // selecting single box item
-        //            selectBoxItems(false);
-        //            QGraphicsScene::mousePressEvent(event);
-        //        }
         _leftTopPoint = event->scenePos();
         if (_isDrawing && event->modifiers() != Qt::ControlModifier) { // drawing box item
-            //            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
 
             // no box selected
             int count = 0;
@@ -272,27 +255,21 @@ void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
                     return;
                 }
             }
-        } else {
-            if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
-                foreach (QGraphicsItem *item, this->items()) {
-                    if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
-                        item->setSelected(true);
-                        break;
-                    }
+        } else if (event->modifiers() == Qt::ControlModifier) { // selecting multiple box items
+            foreach (QGraphicsItem *item, this->items()) {
+                if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
+                    item->setSelected(true);
+                    break;
                 }
-                QGraphicsScene::mousePressEvent(event);
-            } else if (_isPanning) { // pan image
-                selectBoxItems(false);
-                _dragStart = event->scenePos();
-                return;
-            } else {// selecting single box item
-                foreach (QGraphicsItem *item, this->items()) {
-                    if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
-                        selectBoxItems(qgraphicsitem_cast<BoxItem *>(item), true);
-                        _isMoving = true;
-                        QGraphicsScene::mousePressEvent(event);
-                        break;
-                    }
+            }
+            QGraphicsScene::mousePressEvent(event);
+        } else {// selecting single box item
+            foreach (QGraphicsItem *item, this->items()) {
+                if ((item->type() == QGraphicsItem::UserType + 1 && item->contains(_leftTopPoint))) {
+                    selectBoxItems(qgraphicsitem_cast<BoxItem *>(item), true);
+                    _isMoving = true;
+                    QGraphicsScene::mousePressEvent(event);
+                    break;
                 }
             }
         }
@@ -342,16 +319,6 @@ void CustomScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (_isMoving) {
             QGraphicsScene::mouseMoveEvent(event);
         }
-
-        // pan scene
-        if (_isPanning) {
-            QScrollBar *h = this->views().at(0)->horizontalScrollBar();
-            h->setValue(h->value() - (int)(event->scenePos().x() - _dragStart.x()));
-            QScrollBar *v = this->views().at(0)->verticalScrollBar();
-            v->setValue(v->value() - (int)(event->scenePos().y() - _dragStart.y()));
-            _dragEnd = event->scenePos();
-            return;
-        }
     }
     emit cursorMoved(event->scenePos());
 
@@ -370,10 +337,6 @@ void CustomScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                 return;
             }
         }
-        if (_isPanning) {
-            return;
-        }
-
         if (_isMoving) {
             _isMoving = false;
             QGraphicsScene::mouseReleaseEvent(event);
@@ -384,15 +347,6 @@ void CustomScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 
     QGraphicsScene::mouseReleaseEvent(event);
-}
-
-void CustomScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
-{
-    if (mouseEvent->buttons() == Qt::LeftButton) {
-        _isPanning = true;
-        _dragStart = mouseEvent->scenePos();
-    }
-    QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
 }
 
 void CustomScene::keyPressEvent(QKeyEvent *keyEvent)

@@ -7,6 +7,7 @@
 #include <QGraphicsItem>
 #include <QScrollBar>
 #include <QMouseEvent>
+#include <boxitem.h>
 
 class CustomView : public QGraphicsView
 {
@@ -14,9 +15,9 @@ class CustomView : public QGraphicsView
 
 public:
     CustomView(QObject* parent);
-    void panImage(bool op);
+    void panImage(bool checked);
 public slots:
-    void updateCursor(bool checked);
+    void drawBoxItem(bool checked);
 private:
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);

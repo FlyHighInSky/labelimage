@@ -22,18 +22,15 @@ public:
     CustomScene(QObject* parent = 0);
     ~CustomScene()
     {
-        if (isImageLoaded) {
+        if (_image) {
             this->clear();
         }
     }
 
     void loadImage(QString path);
-//    void setViewZoom(int w, int h);
-//    void setViewZoom(double zoom);
     void saveToFile(const QString& path);
     void clear();
 
-    bool isImageLoaded = false;
     void setTypeNameList (const QStringList &list)
     {
         _typeNameList = list;
@@ -69,7 +66,7 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
+//    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
     void keyPressEvent(QKeyEvent *keyEvent);
     void keyReleaseEvent(QKeyEvent *keyEvent);
     void deleteBoxItems();

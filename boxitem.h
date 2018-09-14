@@ -69,6 +69,10 @@ public:
     }
     QRectF _oldRect;
 
+    QCursor oldCursor() const
+    {
+        return _oldCursor;
+    }
     void setOldCursor(QCursor &c)
     {
         _oldCursor = c;

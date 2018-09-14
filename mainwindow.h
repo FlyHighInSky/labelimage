@@ -88,10 +88,10 @@ public:
 
 private slots:
     void openFolder();
-    void pan(bool op);
+    void panImage(bool checked);
     void zoomIn();
     void zoomOut();
-    void drawBoxRect(bool checked);
+    void drawBoxItem(bool checked);
     void editTypeNameList();
     void fitViewToWindow();
     void fitViewToActual();

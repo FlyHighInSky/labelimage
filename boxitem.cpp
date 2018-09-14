@@ -24,7 +24,7 @@ BoxItem::BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameL
     _textName.setParentItem(this);
     this->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable);
     this->setAcceptHoverEvents(true);
-    _oldCursor = Qt::CrossCursor;
+    _oldCursor = Qt::ArrowCursor;
     initContextMenu();
 }
 
@@ -121,7 +121,6 @@ void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent *event )
     event->setAccepted(true);
     if (this->isSelected()){
         QApplication::setOverrideCursor(_oldCursor);
-//        setCursor(_oldCursor);
     }
 }
 

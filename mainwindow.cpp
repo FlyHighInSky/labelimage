@@ -83,6 +83,7 @@ void MainWindow::openFolder()
         QModelIndex index = _fileListModel->index(0, 0, _fileListView->rootIndex());
         _fileListView->setCurrentIndex(index);
         _drawAct->setEnabled(true);
+        _panAct->setEnabled(true);
     }
 }
 
@@ -173,7 +174,7 @@ void MainWindow::createActions()
     _drawAct = new QAction(QIcon(":/images/draw.png"), tr("&Draw Box"), this);
     _drawAct->setShortcut(tr("Ctrl+D"));
     _drawAct->setStatusTip(tr("Draw Box"));
-    connect(_drawAct, &QAction::toggled, this, &MainWindow::drawBoxRect);
+    connect(_drawAct, &QAction::toggled, this, &MainWindow::drawBoxItem);
     _editMenu->addAction(_drawAct);
     _editToolBar->addAction(_drawAct);
     _drawAct->setEnabled(false);
@@ -225,7 +226,8 @@ void MainWindow::createActions()
     _panAct->setStatusTip(tr("Pan Image"));
     _panAct->setCheckable(true);
     _panAct->setChecked(false);
-    connect(_panAct, &QAction::toggled, this, &MainWindow::pan);
+    _panAct->setEnabled(false);
+    connect(_panAct, &QAction::toggled, this, &MainWindow::panImage);
     _viewMenu->addAction(_panAct);
     _viewToolBar->addAction(_panAct);
 
@@ -550,25 +552,19 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     }
 }
 
-void MainWindow::drawBoxRect(bool checked)
+void MainWindow::drawBoxItem(bool checked)
 {
+    if (!_isImageLoaded)
+        return;
+
     if (_panAct->isChecked()) {
         _panAct->setChecked(false);
     }
-    _imageView->updateCursor(checked);
+    _imageView->drawBoxItem(checked);
     _imageScene->drawBoxItem(checked);
 }
 
-void MainWindow::editTypeNameList()
-{
-    TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &_translator);
-    int r = d->exec();
-    if (r == QDialog::Accepted) {
-        delete d;
-    }
-}
-
-void MainWindow::pan(bool op)
+void MainWindow::panImage(bool checked)
 {
     if (!_isImageLoaded)
         return;
@@ -579,13 +575,18 @@ void MainWindow::pan(bool op)
     if (_drawAct->isChecked())
         _drawAct->setChecked(false);
 
-//    if (op) {
-//        _imageView->setDragMode(QGraphicsView::ScrollHandDrag);
-//    } else {
-//        _imageView->setDragMode(QGraphicsView::NoDrag);
-//    }
-    _imageView->panImage(op);
-    _imageScene->panImage(op);
+    _imageView->panImage(checked);
+    _imageScene->panImage(checked);
+}
+
+
+void MainWindow::editTypeNameList()
+{
+    TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &_translator);
+    int r = d->exec();
+    if (r == QDialog::Accepted) {
+        delete d;
+    }
 }
 
 void MainWindow::zoomIn()
