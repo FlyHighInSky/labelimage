@@ -91,8 +91,8 @@ private:
     QPointF _rightBottomPoint;
     QString _boxItemFileName;
     QUndoStack *_undoStack;
-    QCursor _oldCursor = Qt::ArrowCursor;
-    QCursor _cursor;
+//    QCursor _oldCursor = Qt::ArrowCursor;
+//    QCursor _cursor;
     void loadBoxItemsFromFile();
     void saveBoxItemsToFile();
 };

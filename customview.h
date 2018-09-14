@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QApplication>
 #include <QGraphicsView>
+#include <QGraphicsItem>
 
 class CustomView : public QGraphicsView
 {

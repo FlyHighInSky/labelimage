@@ -24,18 +24,18 @@ BoxItem::BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameL
     _textName.setParentItem(this);
     this->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsFocusable);
     this->setAcceptHoverEvents(true);
+    _oldCursor = Qt::CrossCursor;
     initContextMenu();
 }
 
 void BoxItem::setTopmost()
 {
     QList<QGraphicsItem *> list = collidingItems(Qt::IntersectsItemBoundingRect);
-    qreal maxZVal = 0;
     foreach (QGraphicsItem *it, list) {
-        maxZVal = qMax(maxZVal, it->zValue());
+        if (it->type() == QGraphicsItem::UserType + 1) {
+            it->stackBefore(this);
+        }
     }
-    if (this->zValue() <= maxZVal)
-        this->setZValue(maxZVal+1);
 }
 
 void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
@@ -44,8 +44,7 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
     switch (event->buttons()) {
     case Qt::LeftButton:
         if (this->isSelected()) {
-//            setTopmost();
-//            _oldCursor = this->cursor();
+            setTopmost();
             _selectedGrabber = getSelectedGrabber(event->pos());
             setGrabberCursor(_selectedGrabber);
 
@@ -81,7 +80,6 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
                 emit moveCompleted(rect, _oldRect);
                 break;
             case Stretching:
-//                this->setCursor(Qt::ArrowCursor);
                 _dragEnd = event->pos();
                 rect = calculateStretchRect(_dragStart, _dragEnd);
                 emit stretchCompleted(rect, _oldRect);
@@ -100,7 +98,7 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
 void BoxItem::mouseMoveEvent ( QGraphicsSceneMouseEvent * event )
 {
     event->setAccepted(true);
-    if (this->isSelected()){
+    if (this->isSelected()) {
         _isMouseMoved = true;
         switch (_taskStatus) {
         case Moving:
@@ -122,10 +120,7 @@ void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent *event )
 {
     event->setAccepted(true);
     if (this->isSelected()){
-//        this->setCursor(_oldCursor);
         QApplication::setOverrideCursor(_oldCursor);
-//        if (_oldCursor == Qt::CrossCursor)
-//            qDebug() << "OK";
     }
 }
 
@@ -133,8 +128,6 @@ void BoxItem::hoverEnterEvent ( QGraphicsSceneHoverEvent *event )
 {
     event->setAccepted(true);
     if (this->isSelected()){
-//        _oldCursor = this->cursor();
-//        _oldCursor = QApplication::overrideCursor();
         _selectedGrabber = getSelectedGrabber(event->pos());
         setGrabberCursor(_selectedGrabber);
     }
@@ -337,30 +330,6 @@ GrabberID BoxItem::getSelectedGrabber(QPointF point)
 
 void BoxItem::setGrabberCursor(GrabberID id)
 {
-//    switch (id)
-//    {
-//    case BoxRegion:
-//        setCursor(Qt::SizeAllCursor);
-//        break;
-//    case TopLeft:
-//    case BottomRight:
-//        setCursor(Qt::SizeFDiagCursor);
-//        break;
-//    case TopRight:
-//    case BottomLeft:
-//        setCursor(Qt::SizeBDiagCursor);
-//        break;
-//    case LeftCenter:
-//    case RightCenter:
-//        setCursor(Qt::SizeHorCursor);
-//        break;
-//    case TopCenter:
-//    case BottomCenter:
-//        setCursor(Qt::SizeVerCursor);
-//        break;
-//    default:
-//        break;
-//    }
     QCursor c;
     switch (id)
     {

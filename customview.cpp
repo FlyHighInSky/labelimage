@@ -12,7 +12,20 @@ void CustomView::updateCursor(bool checked)
     } else {
         _cursor = Qt::ArrowCursor;
     }
-    QApplication::setOverrideCursor(_cursor);
+
+    bool cursorFlag = false;
+    foreach (QGraphicsItem *item, scene()->selectedItems()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            QPoint viewPoint = mapFromGlobal(QCursor::pos());
+            QPointF scenePoint = mapToScene(viewPoint);
+            if (item->contains(scenePoint)) {
+                cursorFlag = true;
+            }
+        }
+    }
+    if (!cursorFlag) {
+        QApplication::setOverrideCursor(_cursor);
+    }
 }
 
 void CustomView::enterEvent(QEvent *event)

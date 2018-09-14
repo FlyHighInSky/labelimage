@@ -55,7 +55,6 @@ void MainWindow::openFolder()
         _fileListModel = new QDirModel(_filters, QDir::Files | QDir::NoDotAndDotDot, QDir::Name, this);
 
         // init treeview and set model
-        //        fileListView->setFocus();
         _fileListView->setRootIsDecorated(0);
         _fileListView->setModel(_fileListModel);
         _fileListView->setRootIndex(_fileListModel->index(srcImageDir));
@@ -191,12 +190,9 @@ void MainWindow::createActions()
     _editAct->setEnabled(false);
 
     // target type combobox
-    _typeNameComboBox = new QComboBox(this);//(tr("<None Name>"), this);
-    //    _targetTypeCombobox->setStatusTip(tr("Select Target Type"));
-    //    _editMenu->addAction(_targetTypeCombobox);
+    _typeNameComboBox = new QComboBox(this);
     _editToolBar->addWidget(_typeNameComboBox);
     _typeNameComboBox->installEventFilter(this);
-    //    _editAct->setEnabled(false);
 
     _undoGroup = new QUndoGroup(this);
     // undo
@@ -449,7 +445,6 @@ void MainWindow::createCentralWindow()
     _centralWidget = new QWidget(this);
     _horizontalLayout = new QHBoxLayout(_centralWidget);
     _fileListView = new QTreeView(this);
-//    _imageView = new QGraphicsView(this);
     _imageView = new CustomView(this);
     _imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
@@ -478,8 +473,8 @@ void MainWindow::createCentralWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (_viewScene) {
-        delete _viewScene;
+    if (_imageScene) {
+        delete _imageScene;
     }
 }
 
@@ -496,33 +491,32 @@ void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelec
 
 void MainWindow::displayImageView(QString imageFilePath)
 {
-    if (_viewScene) {
-        delete _viewScene;
+    if (_imageScene) {
+        delete _imageScene;
     }
-    _viewScene = new CustomScene(this);
-    _viewScene->setTypeNameList(_typeNameList);
-    _viewScene->setTypeName(_typeNameComboBox->currentText());
+    _imageScene = new CustomScene(this);
+    _imageScene->setTypeNameList(_typeNameList);
+    _imageScene->setTypeName(_typeNameComboBox->currentText());
 
-    _viewScene->installEventFilter(this);
-    connect(_viewScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
-    connect(_viewScene, SIGNAL(boxSelected(QRect, QString)), this, SLOT(updateBoxInfo(QRect, QString)));
-    connect(_viewScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
-    connect(_typeNameComboBox, SIGNAL(activated(QString)), _viewScene, SLOT(changeBoxTypeName(QString)));
-    //    connect(this, SIGNAL(isDrawing(bool)), _viewScene, SLOT(drawingBoxRect(bool)));
+    _imageScene->installEventFilter(this);
+    connect(_imageScene, SIGNAL(cursorMoved(QPointF)), this, SLOT(updateLabelCursorPos(QPointF)));
+    connect(_imageScene, SIGNAL(boxSelected(QRect, QString)), this, SLOT(updateBoxInfo(QRect, QString)));
+    connect(_imageScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
+    connect(_typeNameComboBox, SIGNAL(activated(QString)), _imageScene, SLOT(changeBoxTypeName(QString)));
 
-    _viewScene->loadImage(imageFilePath);
     _isImageLoaded = true;
 
-    _undoGroup->addStack(_viewScene->undoStack());
-    _undoGroup->setActiveStack(_viewScene ? _viewScene->undoStack() : 0);
+    _undoGroup->addStack(_imageScene->undoStack());
+    _undoGroup->setActiveStack(_imageScene ? _imageScene->undoStack() : 0);
 
-    _imageView->setScene(_viewScene);
+    _imageView->setScene(_imageScene);
 
     _fitToWindowAct->setChecked(true);
     fitViewToWindow();
 
     // init drawing status from _drawAct
-    _viewScene->drawingBoxRect(_drawAct->isChecked());
+    _imageScene->drawingBoxRect(_drawAct->isChecked());
+    _imageScene->loadImage(imageFilePath);
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -532,12 +526,11 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj == _viewScene || obj == _typeNameComboBox || obj == this) {
+    if (obj == _imageScene || obj == _typeNameComboBox || obj == this) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             // use Key_Down and Key_Up received by _viewScene and MainWindow to select image in fileListView
             if (keyEvent->key() == Qt::Key_Down || keyEvent->key() == Qt::Key_Up ) {
-                //                qApp->sendEvent(fileListView, event);
                 int rowCount = _fileListModel->rowCount(_fileListView->rootIndex());
                 int currentRow = _fileListView->currentIndex().row();
                 if (keyEvent->key() == Qt::Key_Down) {
@@ -562,15 +555,8 @@ void MainWindow::drawBoxRect(bool checked)
     if (_panAct->isChecked()) {
         _panAct->setChecked(false);
     }
-//    if (checked) {
-////        _imageView->setCursor(Qt::CrossCursor);
-//        QApplication::setOverrideCursor( Qt::CrossCursor );
-//    } else {
-////        _imageView->setCursor(Qt::ArrowCursor);
-//        QApplication::setOverrideCursor( Qt::ArrowCursor );
-//    }
     _imageView->updateCursor(checked);
-    _viewScene->drawingBoxRect(checked);
+    _imageScene->drawingBoxRect(checked);
 }
 
 void MainWindow::editTypeNameList()
@@ -584,7 +570,6 @@ void MainWindow::editTypeNameList()
 
 void MainWindow::pan(bool op)
 {
-    //    _drawAct->setCheckable(false);
     if (!_isImageLoaded)
         return;
 
@@ -594,12 +579,6 @@ void MainWindow::pan(bool op)
     if (_drawAct->isChecked())
         _drawAct->setChecked(false);
 
-//        _viewScene->panImage(_panAct->isChecked());
-    //    if ( _imageView->dragMode() == QGraphicsView::ScrollHandDrag ) {
-    //    _imageView->setDragMode(QGraphicsView::NoDrag);
-    //    } else {
-    //    _imageView->setDragMode(QGraphicsView::ScrollHandDrag);
-    //    }
     if (op) {
         _imageView->setDragMode(QGraphicsView::ScrollHandDrag);
     } else {
@@ -650,7 +629,6 @@ void MainWindow::fitViewToWindow()
     if (_panAct->isChecked())
         _panAct->setChecked(false);
 
-//    _viewScene->setViewZoom(_imageView->width() - 2, _imageView->height() - 2);
     _imageView->fitInView(_imageView->sceneRect(), Qt::KeepAspectRatio);
 }
 
@@ -662,7 +640,6 @@ void MainWindow::fitViewToActual()
     if (_fitToWindowAct->isChecked())
         _fitToWindowAct->setChecked(false);
 
-//    _viewScene->setViewZoom(1);
     _imageView->fitInView(_imageView->rect(), Qt::KeepAspectRatio); // please check this issue.
 }
 

@@ -127,7 +127,7 @@ private:
     QSplitter *_mainSplitter;
     QTreeView *_fileListView;
     CustomView *_imageView;
-    CustomScene *_viewScene = nullptr;
+    CustomScene *_imageScene = nullptr;
     QDirModel *_fileListModel = nullptr;
     QStringList _filters;
     QString _typeNameFile;
