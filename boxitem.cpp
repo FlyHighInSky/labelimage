@@ -44,7 +44,7 @@ void BoxItem::mousePressEvent ( QGraphicsSceneMouseEvent * event )
     switch (event->buttons()) {
     case Qt::LeftButton:
         if (this->isSelected()) {
-            setTopmost();
+//            setTopmost();
 //            _oldCursor = this->cursor();
             _selectedGrabber = getSelectedGrabber(event->pos());
             setGrabberCursor(_selectedGrabber);
@@ -81,7 +81,7 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
                 emit moveCompleted(rect, _oldRect);
                 break;
             case Stretching:
-                this->setCursor(Qt::ArrowCursor);
+//                this->setCursor(Qt::ArrowCursor);
                 _dragEnd = event->pos();
                 rect = calculateStretchRect(_dragStart, _dragEnd);
                 emit stretchCompleted(rect, _oldRect);
@@ -122,8 +122,10 @@ void BoxItem::hoverLeaveEvent ( QGraphicsSceneHoverEvent *event )
 {
     event->setAccepted(true);
     if (this->isSelected()){
-//        this->setCursor(Qt::ArrowCursor);
-        this->setCursor(_oldCursor);
+//        this->setCursor(_oldCursor);
+        QApplication::setOverrideCursor(_oldCursor);
+//        if (_oldCursor == Qt::CrossCursor)
+//            qDebug() << "OK";
     }
 }
 
@@ -131,7 +133,8 @@ void BoxItem::hoverEnterEvent ( QGraphicsSceneHoverEvent *event )
 {
     event->setAccepted(true);
     if (this->isSelected()){
-        _oldCursor = this->cursor();
+//        _oldCursor = this->cursor();
+//        _oldCursor = QApplication::overrideCursor();
         _selectedGrabber = getSelectedGrabber(event->pos());
         setGrabberCursor(_selectedGrabber);
     }
@@ -334,30 +337,56 @@ GrabberID BoxItem::getSelectedGrabber(QPointF point)
 
 void BoxItem::setGrabberCursor(GrabberID id)
 {
+//    switch (id)
+//    {
+//    case BoxRegion:
+//        setCursor(Qt::SizeAllCursor);
+//        break;
+//    case TopLeft:
+//    case BottomRight:
+//        setCursor(Qt::SizeFDiagCursor);
+//        break;
+//    case TopRight:
+//    case BottomLeft:
+//        setCursor(Qt::SizeBDiagCursor);
+//        break;
+//    case LeftCenter:
+//    case RightCenter:
+//        setCursor(Qt::SizeHorCursor);
+//        break;
+//    case TopCenter:
+//    case BottomCenter:
+//        setCursor(Qt::SizeVerCursor);
+//        break;
+//    default:
+//        break;
+//    }
+    QCursor c;
     switch (id)
     {
     case BoxRegion:
-        setCursor(Qt::SizeAllCursor);
+        c = Qt::SizeAllCursor;
         break;
     case TopLeft:
     case BottomRight:
-        setCursor(Qt::SizeFDiagCursor);
+        c = Qt::SizeFDiagCursor;
         break;
     case TopRight:
     case BottomLeft:
-        setCursor(Qt::SizeBDiagCursor);
+        c = Qt::SizeBDiagCursor;
         break;
     case LeftCenter:
     case RightCenter:
-        setCursor(Qt::SizeHorCursor);
+        c = Qt::SizeHorCursor;
         break;
     case TopCenter:
     case BottomCenter:
-        setCursor(Qt::SizeVerCursor);
+        c = Qt::SizeVerCursor;
         break;
     default:
         break;
     }
+    QApplication::setOverrideCursor(c);
 }
 
 void BoxItem::setGrabbers(qreal width, qreal height)

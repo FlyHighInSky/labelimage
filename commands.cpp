@@ -44,7 +44,7 @@ void RemoveBoxesCommand::undo()
         BoxItem *item = _boxList->at(i);
         _scene->addItem(item);
     }
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_boxList, true);
+    reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_boxList, true);
 }
 
 void RemoveBoxesCommand::redo()
@@ -88,7 +88,7 @@ void SetTargetTypeCommand::undo()
         BoxItem *item = _boxList->at(i);
         item->setTypeName(_oldNameList->at(i));
     }
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_boxList, true);
+    reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_boxList, true);
 }
 
 void SetTargetTypeCommand::redo()
@@ -99,7 +99,7 @@ void SetTargetTypeCommand::redo()
         BoxItem *item = _boxList->at(i);
         item->setTypeName(_newName);
     }
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_boxList, true);
+    reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_boxList, true);
 }
 
 /******************************************************************************
@@ -118,12 +118,12 @@ MoveBoxCommand::MoveBoxCommand(QGraphicsScene *scene, BoxItem *box, const QRectF
 
 void MoveBoxCommand::undo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
+    reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_box, true);
     _box->setRect(_oldRect);
 }
 
 void MoveBoxCommand::redo()
 {
-    reinterpret_cast<ViewScene *>(_scene)->selectBoxItems(_box, true);
+    reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_box, true);
     _box->setRect(_newRect);
 }

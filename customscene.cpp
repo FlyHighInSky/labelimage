@@ -1,8 +1,8 @@
-#include "viewscene.h"
+#include "customscene.h"
 #include <QtDebug>
 #include <QScrollBar>
 
-ViewScene::ViewScene(QObject* parent):
+CustomScene::CustomScene(QObject* parent):
     QGraphicsScene(parent),
     _image(nullptr),
     _pixmapItem(nullptr),
@@ -13,7 +13,7 @@ ViewScene::ViewScene(QObject* parent):
 {
 }
 
-void ViewScene::clear()
+void CustomScene::clear()
 {
     saveBoxItemsToFile();
     isImageLoaded = false;
@@ -42,7 +42,7 @@ void ViewScene::clear()
     }
 }
 
-void ViewScene::loadImage(QString filename)
+void CustomScene::loadImage(QString filename)
 {
     //    image = new QImage(path);
     // Get image format
@@ -97,7 +97,7 @@ void ViewScene::loadImage(QString filename)
     isImageLoaded = true;
 }
 
-void ViewScene::loadBoxItemsFromFile()
+void CustomScene::loadBoxItemsFromFile()
 {
     QFile file(_boxItemFileName);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -126,7 +126,7 @@ void ViewScene::loadBoxItemsFromFile()
     file.close();
 }
 
-void ViewScene::registerItem(BoxItem *b)
+void CustomScene::registerItem(BoxItem *b)
 {
     connect(b, SIGNAL(typeNameChanged(QString)), this, SLOT(changeBoxTypeName(QString)));
     connect(b, SIGNAL(boxSelected(QRect, QString)), this, SIGNAL(boxSelected(QRect, QString)));
@@ -135,7 +135,7 @@ void ViewScene::registerItem(BoxItem *b)
     b->installEventFilter(this);
 }
 
-void ViewScene::saveBoxItemsToFile()
+void CustomScene::saveBoxItemsToFile()
 {
     QFile file(_boxItemFileName);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -156,7 +156,7 @@ void ViewScene::saveBoxItemsToFile()
     file.close();
 }
 
-void ViewScene::deleteBoxItems()
+void CustomScene::deleteBoxItems()
 {
     QList<BoxItem *> *boxList = new QList<BoxItem *>();
     foreach (QGraphicsItem *item, this->selectedItems()) {
@@ -171,7 +171,7 @@ void ViewScene::deleteBoxItems()
     delete boxList;
 }
 
-void ViewScene::selectBoxItems(bool op)
+void CustomScene::selectBoxItems(bool op)
 {
     // selecting box items
     foreach (QGraphicsItem *item, this->items()) {
@@ -181,7 +181,7 @@ void ViewScene::selectBoxItems(bool op)
     }
 }
 
-void ViewScene::selectBoxItems(BoxItem *box, bool op)
+void CustomScene::selectBoxItems(BoxItem *box, bool op)
 {
     foreach (QGraphicsItem *item, this->items()) {
         if (item->type() == QGraphicsItem::UserType+1) {
@@ -192,7 +192,7 @@ void ViewScene::selectBoxItems(BoxItem *box, bool op)
     //    item->setSelected(op);
 }
 
-void ViewScene::selectBoxItems(QList<BoxItem *> *boxList, bool op)
+void CustomScene::selectBoxItems(QList<BoxItem *> *boxList, bool op)
 {
     foreach (QGraphicsItem *item, this->items()) {
         if (item->type() == QGraphicsItem::UserType+1) {
@@ -201,7 +201,7 @@ void ViewScene::selectBoxItems(QList<BoxItem *> *boxList, bool op)
     }
 }
 
-void ViewScene::drawingBoxRect(bool op)
+void CustomScene::drawingBoxRect(bool op)
 {
     _isDrawing = op;
     _isPanning = false;
@@ -218,6 +218,12 @@ void ViewScene::drawingBoxRect(bool op)
     //    }
     QCursor c = _isDrawing ? Qt::CrossCursor : Qt::ArrowCursor;
     //    _pixmapItem->setCursor(c);
+//        if (_isDrawing) {
+//            this->views().at(0)->viewport()->setCursor(Qt::CrossCursor);
+//        } else {
+//            this->views().at(0)->viewport()->setCursor(_oldCursor);
+//        }
+
 
     foreach (QGraphicsItem *item, this->items()) {
         if (item->type() == QGraphicsItem::UserType+1) {
@@ -247,7 +253,7 @@ void ViewScene::drawingBoxRect(bool op)
 //    }
 //}
 
-void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     switch (event->buttons()) {
     case Qt::LeftButton:
@@ -337,7 +343,7 @@ void ViewScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsScene::mousePressEvent(event);
 }
 
-void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void CustomScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton) {
         _isMouseMoved = true;
@@ -376,7 +382,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         // pan scene
         if (_isPanning) {
-            //            this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
+//                        this->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
             QScrollBar *h = this->views().at(0)->horizontalScrollBar();
             h->setValue(h->value() - (int)(event->scenePos().x() - _dragStart.x()));
             QScrollBar *v = this->views().at(0)->verticalScrollBar();
@@ -391,7 +397,7 @@ void ViewScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         QGraphicsScene::mouseMoveEvent(event);
 }
 
-void ViewScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void CustomScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     if (_isMouseMoved) {
         if (_isDrawing) {
@@ -418,7 +424,7 @@ void ViewScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsScene::mouseReleaseEvent(event);
 }
 
-void ViewScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
+void CustomScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
     if (mouseEvent->buttons() == Qt::LeftButton)
     {
@@ -430,7 +436,7 @@ void ViewScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
     QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
 }
 
-void ViewScene::keyPressEvent(QKeyEvent *keyEvent)
+void CustomScene::keyPressEvent(QKeyEvent *keyEvent)
 {
     if(keyEvent->key() == Qt::Key_Delete) {
         deleteBoxItems();
@@ -441,7 +447,7 @@ void ViewScene::keyPressEvent(QKeyEvent *keyEvent)
     }
 }
 
-void ViewScene::keyReleaseEvent(QKeyEvent *keyEvent)
+void CustomScene::keyReleaseEvent(QKeyEvent *keyEvent)
 {
     QGraphicsScene::keyReleaseEvent(keyEvent);
 }
@@ -459,7 +465,7 @@ void ViewScene::keyReleaseEvent(QKeyEvent *keyEvent)
 //    drawView();
 //}
 
-void ViewScene::changeBoxTypeName(QString name)
+void CustomScene::changeBoxTypeName(QString name)
 {
     _typeName = name;
     QList<BoxItem *> *boxList = new QList<BoxItem *>();
@@ -475,7 +481,7 @@ void ViewScene::changeBoxTypeName(QString name)
     delete boxList;
 }
 
-void ViewScene::moveBox(QRectF newRect, QRectF oldRect)
+void CustomScene::moveBox(QRectF newRect, QRectF oldRect)
 {
     BoxItem *item = reinterpret_cast<BoxItem *>(QObject::sender());
     if (item != nullptr) {

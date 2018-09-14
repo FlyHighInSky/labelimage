@@ -1,5 +1,5 @@
-#ifndef VIEWSCENE_H
-#define VIEWSCENE_H
+#ifndef CUSTOMSCENE_H
+#define CUSTOMSCENE_H
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
@@ -15,12 +15,12 @@
 #include "commands.h"
 #include "FreeImage.h"
 
-class ViewScene : public QGraphicsScene
+class CustomScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
-    ViewScene(QObject* parent = 0);
-    ~ViewScene()
+    CustomScene(QObject* parent = 0);
+    ~CustomScene()
     {
         if (isImageLoaded) {
             this->clear();
@@ -92,7 +92,8 @@ private:
     QString _boxItemFileName;
     QUndoStack *_undoStack;
     QCursor _oldCursor = Qt::ArrowCursor;
+    QCursor _cursor;
     void loadBoxItemsFromFile();
     void saveBoxItemsToFile();
 };
-#endif // VIEWSCENE_H
+#endif // CUSTOMSCENE_H

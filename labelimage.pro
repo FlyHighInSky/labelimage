@@ -3,18 +3,20 @@ VERSION = 1.1.0
 
 HEADERS       = \
     mainwindow.h \
-    viewscene.h \
     boxitem.h \
     FreeImage.h \
     typeeditdialog.h \
-    commands.h
+    commands.h \
+    customview.h \
+    customscene.h
 SOURCES       = \
                 main.cpp \
     mainwindow.cpp \
-    viewscene.cpp \
     boxitem.cpp \
     typeeditdialog.cpp \
-    commands.cpp
+    commands.cpp \
+    customview.cpp \
+    customscene.cpp
 
 # install
 # target.path = $$[QT_INSTALL_EXAMPLES]/widgets/widgets/labelimage

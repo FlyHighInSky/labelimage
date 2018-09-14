@@ -62,7 +62,8 @@
 #include <QHBoxLayout>
 #include <QImageReader>
 #endif
-#include "viewscene.h"
+#include "customscene.h"
+#include "customview.h"
 #include <QMessageBox>
 #include <QUndoGroup>
 #include "typeeditdialog.h"
@@ -125,8 +126,8 @@ private:
     QHBoxLayout *_horizontalLayout;
     QSplitter *_mainSplitter;
     QTreeView *_fileListView;
-    QGraphicsView *_imageView;
-    ViewScene *_viewScene = nullptr;
+    CustomView *_imageView;
+    CustomScene *_viewScene = nullptr;
     QDirModel *_fileListModel = nullptr;
     QStringList _filters;
     QString _typeNameFile;

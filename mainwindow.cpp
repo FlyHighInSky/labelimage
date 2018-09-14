@@ -449,7 +449,8 @@ void MainWindow::createCentralWindow()
     _centralWidget = new QWidget(this);
     _horizontalLayout = new QHBoxLayout(_centralWidget);
     _fileListView = new QTreeView(this);
-    _imageView = new QGraphicsView(this);
+//    _imageView = new QGraphicsView(this);
+    _imageView = new CustomView(this);
     _imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
     _mainSplitter = new QSplitter(Qt::Horizontal, _centralWidget);
@@ -498,7 +499,7 @@ void MainWindow::displayImageView(QString imageFilePath)
     if (_viewScene) {
         delete _viewScene;
     }
-    _viewScene = new ViewScene(this);
+    _viewScene = new CustomScene(this);
     _viewScene->setTypeNameList(_typeNameList);
     _viewScene->setTypeName(_typeNameComboBox->currentText());
 
@@ -561,11 +562,14 @@ void MainWindow::drawBoxRect(bool checked)
     if (_panAct->isChecked()) {
         _panAct->setChecked(false);
     }
-    if (checked) {
-        _imageView->setCursor(Qt::CrossCursor);
-    } else {
-        _imageView->setCursor(Qt::ArrowCursor);
-    }
+//    if (checked) {
+////        _imageView->setCursor(Qt::CrossCursor);
+//        QApplication::setOverrideCursor( Qt::CrossCursor );
+//    } else {
+////        _imageView->setCursor(Qt::ArrowCursor);
+//        QApplication::setOverrideCursor( Qt::ArrowCursor );
+//    }
+    _imageView->updateCursor(checked);
     _viewScene->drawingBoxRect(checked);
 }
 

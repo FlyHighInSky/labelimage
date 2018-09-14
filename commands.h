@@ -4,7 +4,7 @@
 //#include <QGraphicsScene>
 #include <boxitem.h>
 #include <QUndoCommand>
-#include <viewscene.h>
+#include <customscene.h>
 
 class AddBoxCommand : public QUndoCommand
 {

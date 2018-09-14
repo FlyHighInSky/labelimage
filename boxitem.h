@@ -15,6 +15,7 @@
 #include <QStyleOptionGraphicsItem>
 #include "cornergrabber.h"
 #include <QMenu>
+#include <QApplication>
 
 enum GrabberID{
     TopLeft = 0,
@@ -68,7 +69,7 @@ public:
     }
     QRectF _oldRect;
 
-    void setOldCursor(QCursor c)
+    void setOldCursor(QCursor &c)
     {
         _oldCursor = c;
     }
