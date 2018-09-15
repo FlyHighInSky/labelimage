@@ -40,6 +40,11 @@ void CustomView::panImage(bool checked)
         _cursor = Qt::OpenHandCursor;
     } else {
         _cursor = Qt::ArrowCursor;
+        foreach (QGraphicsItem *item, scene()->items()) {
+            if (item->type() == QGraphicsItem::UserType+1) {
+                qgraphicsitem_cast<BoxItem *>(item)->setOldCursor(_cursor);
+            }
+        }
     }
     QApplication::setOverrideCursor(_cursor);
 }

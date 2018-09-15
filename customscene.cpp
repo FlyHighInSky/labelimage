@@ -126,6 +126,7 @@ void CustomScene::registerItem(BoxItem *b)
 {
     connect(b, SIGNAL(typeNameChanged(QString)), this, SLOT(changeBoxTypeName(QString)));
     connect(b, SIGNAL(boxSelected(QRect, QString)), this, SIGNAL(boxSelected(QRect, QString)));
+    connect(b, SIGNAL(boxSelected(QRect, QString)), this, SLOT(selectedBoxItemInfo(QRect,QString)));
     connect(b, SIGNAL(stretchCompleted(QRectF, QRectF)), this, SLOT(moveBox(QRectF, QRectF)));
     connect(b, SIGNAL(moveCompleted(QRectF, QRectF)), this, SLOT(moveBox(QRectF, QRectF)));
     b->installEventFilter(this);

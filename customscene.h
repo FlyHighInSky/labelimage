@@ -54,6 +54,10 @@ public:
 
 public slots:
     void changeBoxTypeName(QString name);
+    void selectedBoxItemInfo(QRect rect, QString typeName)
+    {
+        _typeName = typeName;
+    }
 private slots:
     void moveBox(QRectF newRect, QRectF oldRect);
 

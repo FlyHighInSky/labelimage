@@ -92,6 +92,7 @@ void BoxItem::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event )
         _isMouseMoved = false;
     } else {
         this->setSelected(true);
+        emit boxSelected(getRealRect(), _typeName);
     }
 }
 
