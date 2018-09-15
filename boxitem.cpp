@@ -274,8 +274,8 @@ QRectF BoxItem::boundingRect() const
 
 void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    double scaleValue = scale()/painter->transform().m11();
-    _pen.setWidthF(_penWidth*scaleValue);
+    double xScale = scale()/painter->transform().m11();
+    _pen.setWidthF(_penWidth*xScale);
     _pen.setColor(_color);
     _pen.setStyle(Qt::SolidLine);
     painter->setPen(_pen);
@@ -283,13 +283,15 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
     QBrush brush(QColor(255,0,0,0), Qt::SolidPattern);
     painter->setBrush(brush);
 
+    painter->drawRect(_rect);
+
+    double yScale = scale()/painter->transform().m22();
     if (option->state & QStyle::State_Selected) {
-        setGrabbers(_grabberWidth*scaleValue, _grabberHeight*scaleValue);
+        setGrabbers(_grabberWidth*xScale, _grabberHeight*yScale);
         for (int i=TopLeft; i<=LeftCenter; i++) {
             painter->fillRect(_grabbers[i], QColor(255, 0, 0, 255));
         }
     }
-    painter->drawRect(_rect);
 
     _textRect.setPos(_rect.topLeft());
     QRect r = getRealRect();
@@ -330,38 +332,38 @@ GrabberID BoxItem::getSelectedGrabber(QPointF point)
 
 void BoxItem::setGrabberCursor(GrabberID id)
 {
-    QCursor c;
+    QCursor cursor;
     switch (id)
     {
     case BoxRegion:
-        c = Qt::SizeAllCursor;
+        cursor = Qt::SizeAllCursor;
         break;
     case TopLeft:
     case BottomRight:
-        c = Qt::SizeFDiagCursor;
+        cursor = Qt::SizeFDiagCursor;
         break;
     case TopRight:
     case BottomLeft:
-        c = Qt::SizeBDiagCursor;
+        cursor = Qt::SizeBDiagCursor;
         break;
     case LeftCenter:
     case RightCenter:
-        c = Qt::SizeHorCursor;
+        cursor = Qt::SizeHorCursor;
         break;
     case TopCenter:
     case BottomCenter:
-        c = Qt::SizeVerCursor;
+        cursor = Qt::SizeVerCursor;
         break;
     default:
         break;
     }
-    QApplication::setOverrideCursor(c);
+    QApplication::setOverrideCursor(cursor);
 //    setCursor(c);
 }
 
 void BoxItem::setGrabbers(qreal width, qreal height)
 {
-    int w = width/2, h = height/2;
+    qreal w = width/2, h = height/2; // int -> qreal, solve grabber transformation bug
 
     // drawingRegion contains rect and 8 grabbers
     _grabbers[TopLeft     ].setRect(_rect.left()-w,     _rect.top()-h,       width, height);
