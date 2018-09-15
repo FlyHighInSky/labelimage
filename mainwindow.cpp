@@ -437,8 +437,8 @@ void MainWindow::retranslate()
                                .toUtf8());
     if (!_cursorPos.isNull())
         _labelCursorPos->setText(QString(tr("Cursor: %1, %2"))
-                                 .arg(_cursorPos.x())
-                                 .arg(_cursorPos.y())
+                                 .arg((int)_cursorPos.x())
+                                 .arg((int)_cursorPos.y())
                                  .toUtf8());
 }
 
@@ -681,7 +681,7 @@ void MainWindow::updateLabelCursorPos(QPointF cursorPos)
 {
     _cursorPos = cursorPos;
     _labelCursorPos->setText(QString(tr("Cursor: %1, %2"))
-                             .arg(_cursorPos.x())
-                             .arg(_cursorPos.y())
+                             .arg((int)_cursorPos.x())
+                             .arg((int)_cursorPos.y())
                              .toUtf8());
 }
