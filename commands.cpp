@@ -14,12 +14,16 @@ AddBoxCommand::AddBoxCommand(QGraphicsScene *scene, BoxItem *box, QUndoCommand *
 void AddBoxCommand::undo()
 {
     _scene->removeItem(_box);
+    QApplication::setOverrideCursor(_box->oldCursor());
 }
 
 void AddBoxCommand::redo()
 {
     _scene->addItem(_box);
     _box->setSelected(true);
+
+    QCursor c = Qt::CrossCursor;
+    _box->setOldCursor(c);
 }
 
 /******************************************************************************
@@ -52,6 +56,7 @@ void RemoveBoxesCommand::redo()
     for (int i=0; i<_boxList->count(); i++) {
         BoxItem *item = _boxList->at(i);
         _scene->removeItem(item);
+        QApplication::setOverrideCursor(item->oldCursor());
     }
 }
 

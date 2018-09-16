@@ -12,8 +12,8 @@ BoxItem::BoxItem(QRectF sceneRect, QSize imageSize, QStringList &targetTypeNameL
     _dragStart(0,0),
     _dragEnd(0,0),
     _sceneRect(sceneRect),
-    _grabberWidth(12),
-    _grabberHeight(12),
+    _grabberWidth(16),
+    _grabberHeight(16),
     _imageSize(imageSize)
 {
     _textRect.setDefaultTextColor(QColor(255,255,255,255));
@@ -294,14 +294,16 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
         }
     }
 
-    _textRect.setPos(_rect.topLeft());
-    QRect r = getRealRect();
-    QString rectInfo = QString("[%1,%2,%3,%4]")
-            .arg(r.left()).arg(r.top())
-            .arg(r.width()).arg(r.height());
-    _textRect.setPlainText(rectInfo);
+//    _textRect.setPos(_rect.topLeft());
+//    QRect r = getRealRect();
+//    QString rectInfo = QString("[%1,%2,%3,%4]")
+//            .arg(r.left()).arg(r.top())
+//            .arg(r.width()).arg(r.height());
+//    _textRect.setPlainText(rectInfo);
 
-    _textName.setPos(_rect.bottomLeft());
+//    _textName.setPos(_rect.bottomLeft());
+//    _textName.setPlainText(_typeName);
+    _textName.setPos(_rect.topLeft());
     _textName.setPlainText(_typeName);
 }
 

@@ -77,6 +77,7 @@ void MainWindow::openFolder()
         saveImageNamesToFile(srcImageDir + "/train.txt");
 
         // add type name on combobox
+        _typeNameComboBox->clear();
         _typeNameComboBox->addItems(_typeNameList);
 
         // set the first image selected.
@@ -514,6 +515,10 @@ void MainWindow::displayImageView(QString imageFilePath)
 
     _imageView->setScene(_imageScene);
 
+    _panAct->setChecked(false);
+    if (_drawAct->isChecked()) {
+        drawBoxItem(true);
+    }
     _fitToWindowAct->setChecked(true);
     fitViewToWindow();
 
