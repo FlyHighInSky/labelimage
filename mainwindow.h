@@ -104,12 +104,13 @@ private slots:
     void updateBoxInfo(QRect rect, QString typeName);
     void switchLanguage();
     void saveImageNamesToFile(const QString fileName);
-//signals:
-//    void isDrawing(bool op);
+    void updateCopyCutActions();
+    void updatePasteAction();
 
 private:
     void wheelEvent(QWheelEvent *event);
     void resizeEvent(QResizeEvent* event);
+    void showEvent(QShowEvent* event);
     void createActions();
     void createCentralWindow();
     void createMenus();
@@ -154,6 +155,9 @@ private:
     QComboBox *_typeNameComboBox;
     QAction *_undoAct;
     QAction *_redoAct;
+    QAction *_copyAct;
+    QAction *_cutAct;
+    QAction *_pasteAct;
     QUndoGroup *_undoGroup;
     QMenu *_viewMenu;
     QToolBar *_viewToolBar;

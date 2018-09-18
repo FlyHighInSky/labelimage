@@ -16,6 +16,7 @@ class CustomView : public QGraphicsView
 public:
     CustomView(QObject* parent);
     void panImage(bool checked);
+//    void fitInView(const QRectF &rect, Qt::AspectRatioMode aspectRatioMode);
 public slots:
     void drawBoxItem(bool checked);
 private:

@@ -8,7 +8,8 @@ HEADERS       = \
     typeeditdialog.h \
     commands.h \
     customview.h \
-    customscene.h
+    customscene.h \
+    boxitemmimedata.h
 SOURCES       = \
                 main.cpp \
     mainwindow.cpp \
@@ -16,7 +17,8 @@ SOURCES       = \
     typeeditdialog.cpp \
     commands.cpp \
     customview.cpp \
-    customscene.cpp
+    customscene.cpp \
+    boxitemmimedata.cpp
 
 # install
 # target.path = $$[QT_INSTALL_EXAMPLES]/widgets/widgets/labelimage

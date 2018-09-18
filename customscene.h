@@ -14,6 +14,8 @@
 #include <QUndoStack>
 #include "commands.h"
 #include "FreeImage.h"
+#include "boxitemmimedata.h"
+#include <QClipboard>
 
 class CustomScene : public QGraphicsScene
 {
@@ -43,8 +45,6 @@ public:
     {
         return _undoStack;
     }
-    void undo();
-    void redo();
     void selectBoxItems(QList<BoxItem *> *boxList, bool op);
     void selectBoxItems(BoxItem *box, bool op);
     void selectBoxItems(bool op);
@@ -58,6 +58,11 @@ public slots:
     {
         _typeName = typeName;
     }
+    void copy();
+    void cut();
+    void paste();
+    void clipboardDataChanged();
+
 private slots:
     void moveBox(QRectF newRect, QRectF oldRect);
 
@@ -70,12 +75,9 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-//    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
     void keyPressEvent(QKeyEvent *keyEvent);
     void keyReleaseEvent(QKeyEvent *keyEvent);
     void deleteBoxItems();
-//    void setTopmost(QGraphicsItem *item);
-//    bool eventFilter(QObject *obj, QEvent *event);
 private:
     QImage *_image;
     QGraphicsPixmapItem *_pixmapItem = nullptr;
@@ -92,8 +94,9 @@ private:
     QPointF _rightBottomPoint;
     QString _boxItemFileName;
     QUndoStack *_undoStack;
-//    QCursor _oldCursor = Qt::ArrowCursor;
-//    QCursor _cursor;
+    BoxItemMimeData *_boxItemMimeData = nullptr;
+    QList<QPointF> _pastePos;
+    QPointF _clickedPos;
     void loadBoxItemsFromFile();
     void saveBoxItemsToFile();
 };

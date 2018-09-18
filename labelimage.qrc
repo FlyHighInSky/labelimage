@@ -21,5 +21,8 @@
         <file>images/edit.png</file>
         <file>images/draw.png</file>
         <file>images/pan.png</file>
+        <file>images/copy.png</file>
+        <file>images/cut.png</file>
+        <file>images/paste.png</file>
     </qresource>
 </RCC>

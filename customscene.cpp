@@ -8,7 +8,8 @@ CustomScene::CustomScene(QObject* parent):
     _pixmapItem(nullptr),
     _boxItem(nullptr),
     _isDrawing(false),
-    _undoStack(new QUndoStack)
+    _undoStack(new QUndoStack),
+    _clickedPos(QPointF(0,0))
 {
 }
 
@@ -23,6 +24,9 @@ void CustomScene::clear()
     if (_pixmapItem != nullptr) {
         delete _pixmapItem;
         _pixmapItem = nullptr;
+    }
+    if (_boxItemMimeData) {
+        delete _boxItemMimeData;
     }
 
     foreach (QGraphicsItem *item, this->items()) {
@@ -116,7 +120,8 @@ void CustomScene::loadBoxItemsFromFile()
             BoxItem *b = new BoxItem(fatherRect, _image->size(), _typeNameList, _typeNameList.at(index));
             b->setRect(x,y,w,h);
             this->registerItem(b);
-            this->addItem(b);
+            if (!b->rect().isNull())
+                this->addItem(b);
         }
     }
     file.close();
@@ -155,20 +160,18 @@ void CustomScene::saveBoxItemsToFile()
 
 void CustomScene::deleteBoxItems()
 {
-    QList<BoxItem *> *boxList = new QList<BoxItem *>();
+    QList<QGraphicsItem *> boxList;
     foreach (QGraphicsItem *item, this->selectedItems()) {
         if (item->type() == QGraphicsItem::UserType+1) {
-            BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
-            boxList->append(b);
+            boxList.append(item);
         }
     }
 
-    if (boxList->count() > 0) {
+    if (boxList.count() > 0) {
         _undoStack->push(new RemoveBoxesCommand(this, boxList));
-        QApplication::setOverrideCursor(boxList->at(0)->oldCursor());
+        QApplication::setOverrideCursor(qgraphicsitem_cast<BoxItem *>(boxList.at(0))->oldCursor());
     }
-
-    delete boxList;
+    boxList.clear();
 }
 
 void CustomScene::selectBoxItems(bool op)
@@ -276,7 +279,6 @@ void CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         }
         break;
     case Qt::RightButton:
-        selectBoxItems(false);
         QGraphicsScene::mousePressEvent(event);
         break;
     default:
@@ -333,7 +335,11 @@ void CustomScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         if (_isDrawing) {
             if (_boxItem) {
                 this->removeItem(_boxItem);
-                _undoStack->push(new AddBoxCommand(this, _boxItem));
+                if ( _boxItem->rect().width() > 5 && (_boxItem->rect().height() > 5 ) ) {
+                    QCursor c = Qt::CrossCursor;
+                    _boxItem->setOldCursor(c);
+                    _undoStack->push(new AddBoxCommand(this, _boxItem));
+                }
                 _boxItem = 0;
                 return;
             }
@@ -345,6 +351,9 @@ void CustomScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
         _isMouseMoved = false;
         return;
+    } else {
+        if (_boxItemMimeData)
+            _clickedPos = event->scenePos();
     }
 
     QGraphicsScene::mouseReleaseEvent(event);
@@ -389,4 +398,116 @@ void CustomScene::moveBox(QRectF newRect, QRectF oldRect)
     if (item != nullptr) {
         _undoStack->push(new MoveBoxCommand(this, item, newRect, oldRect));
     }
+}
+
+
+void CustomScene::copy()
+{
+    if (selectedItems().count() <=0 )
+        return;
+
+    if (_boxItemMimeData) {
+        delete _boxItemMimeData;
+    }
+    _boxItemMimeData = new BoxItemMimeData(selectedItems());
+    QApplication::clipboard()->setMimeData(_boxItemMimeData);
+
+    _pastePos.clear();
+    for (int i=0; i<selectedItems().count(); i++)
+        _pastePos.append(QPointF(0,0));
+    _clickedPos = QPointF(0,0);
+}
+
+void CustomScene::paste()
+{
+    QMimeData *m = const_cast<QMimeData *>(QApplication::clipboard()->mimeData()) ;
+    BoxItemMimeData *data = dynamic_cast<BoxItemMimeData*>(m);
+    if (data){
+        clearSelection();
+
+        QList<QPointF> offset;
+        QList<QRectF> itemRects;
+        QRectF unitedRect(0,0,0,0);
+
+        for (int i=0; i<data->items().count(); i++) {
+            BoxItem *b = qgraphicsitem_cast<BoxItem*>(data->items().at(i));
+            itemRects.append(b->rect());
+            unitedRect = unitedRect.united(b->rect());
+        }
+        if (!unitedRect.isNull()) {
+            for (int i=0; i<itemRects.count(); i++) {
+                offset.append(itemRects[i].topLeft() - unitedRect.topLeft());
+            }
+        }
+
+        for (int i=0; i<_pastePos.count(); i++) {
+            if (_pastePos[i].isNull()) {
+                _pastePos[i] = QPointF(itemRects[i].x(), itemRects[i].y());
+            }
+        }
+        if (!_clickedPos.isNull()) {
+            unitedRect.moveCenter(_clickedPos);
+            for (int i=0; i<_pastePos.count(); i++) {
+                _pastePos[i] = unitedRect.topLeft() + offset[i];
+            }
+            _clickedPos = QPointF(0,0);
+        }
+        itemRects.clear();
+        offset.clear();
+
+        int count = 0;
+        QList<BoxItem*> *copyList = new QList<BoxItem *>();
+        foreach (QGraphicsItem* item, data->items()) {
+            if (item->type() == QGraphicsItem::UserType + 1) {
+                BoxItem *b = qgraphicsitem_cast<BoxItem*>(item);
+                if (_clickedPos.isNull())
+                    _pastePos[count] += QPointF(10, 10);
+                QRectF rect(_pastePos[count].x(), _pastePos[count].y(), b->rect().width(), b->rect().height());
+                BoxItem *copy = b->copy();
+                copy->setRect(rect);
+                copy->setSelected(true);
+                this->registerItem(copy);
+                copyList->append(copy);
+
+                count++;
+            }
+        }
+        if (copyList->count() > 0) {
+            _undoStack->push(new AddBoxCommand(this, copyList));
+        }
+//        if (copyList)
+//            delete copyList;
+    }
+}
+
+void CustomScene::cut()
+{
+    QList<QGraphicsItem*> copyList;
+    foreach (QGraphicsItem *item , selectedItems()) {
+        if (item->type() == QGraphicsItem::UserType + 1) {
+            BoxItem *b = qgraphicsitem_cast<BoxItem*>(item);
+            BoxItem *copy = b->copy();
+            copyList.append(copy);
+        }
+    }
+    if (copyList.count() > 0){
+        deleteBoxItems();
+        if (_boxItemMimeData) {
+            delete _boxItemMimeData;
+        }
+        _boxItemMimeData = new BoxItemMimeData(copyList);
+        QApplication::clipboard()->setMimeData(_boxItemMimeData);
+
+        _pastePos.clear();
+        for (int i=0; i<copyList.count(); i++)
+            _pastePos.append(QPointF(0,0));
+        _clickedPos = QPointF(0,0);
+    }
+    copyList.clear();
+}
+
+void CustomScene::clipboardDataChanged()
+{
+//    QObject::sender()
+//   pasteAction->setEnabled(true);
 }

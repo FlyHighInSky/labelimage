@@ -50,7 +50,6 @@ public:
     {
         return _typeName;
     }
-    void setScale(QRectF fatherRect);
     void setRect(const QRectF &rect);
     void setRect(const qreal x, const qreal y, const qreal w, const qreal h);
     void rect(qreal *info) const
@@ -67,7 +66,6 @@ public:
     {
         return _rect;
     }
-    QRectF _oldRect;
 
     QCursor oldCursor() const
     {
@@ -82,6 +80,14 @@ public:
     {
         // Enable the use of qgraphicsitem_cast with this item.
         return Type;
+    }
+//    BoxItem *copyTo(QRectF initRect)
+    BoxItem *copy()
+    {
+        BoxItem *b = new BoxItem(_sceneRect, _imageSize, _typeNameList, _typeName);
+        b->setRect(_rect);
+        b->setOldCursor(_oldCursor);
+        return b;
     }
 
 signals:
@@ -128,6 +134,7 @@ private:
     QString _typeName;
 
     QCursor _oldCursor;
+    QRectF _oldRect;
     QMenu _contextMenu;
     QColor _color;
     qreal _penWidth = 2;

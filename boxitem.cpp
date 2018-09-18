@@ -238,7 +238,11 @@ void BoxItem::setRect(const QRectF &rect)
             _boundingRect = _sceneRect.intersected(_boundingRect);
             _rect = rect.intersected(_boundingRect);
         }
+    } else {
+        _rect = QRectF(0,0,0,0);
+        return;
     }
+
     setGrabbers(_grabberWidth, _grabberHeight);
 
     qreal halfpw = (_pen.style() == Qt::NoPen) ? qreal(0) : _pen.widthF() / 2;
@@ -416,17 +420,6 @@ void BoxItem::mouseMoveEvent(QGraphicsSceneDragDropEvent *event)
 void BoxItem::mousePressEvent(QGraphicsSceneDragDropEvent *event)
 {
     event->setAccepted(false);
-}
-
-void BoxItem::setScale(QRectF fatherRect)
-{
-    qreal dx = fatherRect.width()/_sceneRect.width();
-    qreal dy = fatherRect.height()/_sceneRect.height();
-
-    qreal x = fatherRect.left() + (_rect.left() - _sceneRect.left())*dx;
-    qreal y = fatherRect.top() + (_rect.top() - _sceneRect.top())*dy;
-    this->_sceneRect = fatherRect;
-    this->setRect(x, y, _rect.width()*dx, _rect.height()*dy);
 }
 
 void BoxItem::initContextMenu()

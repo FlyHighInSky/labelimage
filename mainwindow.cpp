@@ -183,7 +183,7 @@ void MainWindow::createActions()
     _drawAct->setChecked(false);
 
     // edit type name
-    _editAct = new QAction(QIcon(":/images/edit.png"), tr("&Target Type"), this);
+    _editAct = new QAction(QIcon(":/images/edit.png"), tr("T&arget Type"), this);
     _editAct->setShortcut(tr("Ctrl+T"));
     _editAct->setStatusTip(tr("Edit Target Type"));
     connect(_editAct, &QAction::triggered, this, &MainWindow::editTypeNameList);
@@ -195,6 +195,8 @@ void MainWindow::createActions()
     _typeNameComboBox = new QComboBox(this);
     _editToolBar->addWidget(_typeNameComboBox);
     _typeNameComboBox->installEventFilter(this);
+
+    _editMenu->addSeparator();
 
     _undoGroup = new QUndoGroup(this);
     // undo
@@ -214,6 +216,32 @@ void MainWindow::createActions()
     _redoAct->setShortcut(QKeySequence::Redo);
     _editMenu->addAction(_redoAct);
     _editToolBar->addAction(_redoAct);
+
+    _editMenu->addSeparator();
+
+    // copy
+    _copyAct = new QAction(QIcon(":/images/copy.png"), tr("&Copy"), this);
+    _copyAct->setStatusTip(tr("Copy"));
+    _copyAct->setShortcut(QKeySequence::Copy);
+    _copyAct->setEnabled(false);
+    _editMenu->addAction(_copyAct);
+    _editToolBar->addAction(_copyAct);
+
+    // cut
+    _cutAct = new QAction(QIcon(":/images/cut.png"), tr("Cu&t"), this);
+    _cutAct->setStatusTip(tr("Cut"));
+    _cutAct->setShortcut(QKeySequence::Cut);
+    _cutAct->setEnabled(false);
+    _editMenu->addAction(_cutAct);
+    _editToolBar->addAction(_cutAct);
+
+    // paste
+    _pasteAct = new QAction(QIcon(":/images/paste.png"), tr("&Paste"), this);
+    _pasteAct->setStatusTip(tr("Paste"));
+    _pasteAct->setShortcut(QKeySequence::Paste);
+    _pasteAct->setEnabled(false);
+    _editMenu->addAction(_pasteAct);
+    _editToolBar->addAction(_pasteAct);
 
     menuBar()->addSeparator();
 
@@ -358,7 +386,7 @@ void MainWindow::retranslate()
     _drawAct->setStatusTip(tr("Draw Box"));
 
     // edit target type
-    _editAct ->setText(tr("&Target Type"));
+    _editAct ->setText(tr("T&arget Type"));
     _editAct->setShortcut(tr("Ctrl+T"));
     _editAct->setStatusTip(tr("Edit Target Type"));
 
@@ -369,6 +397,18 @@ void MainWindow::retranslate()
     // redo
     _redoAct->setText(tr("&Redo"));
     _redoAct->setStatusTip(tr("Redo"));
+
+    // copy
+    _copyAct->setText(tr("&Copy"));
+    _copyAct->setStatusTip(tr("Copy"));
+
+    // cut
+    _cutAct->setText(tr("Cu&t"));
+    _cutAct->setStatusTip(tr("Cut"));
+
+    // paste
+    _pasteAct->setText(tr("&Paste"));
+    _pasteAct->setStatusTip(tr("Paste"));
 
     // view menu
     _viewMenu->setTitle(tr("&View"));
@@ -507,6 +547,17 @@ void MainWindow::displayImageView(QString imageFilePath)
     connect(_imageScene, SIGNAL(imageLoaded(QSize)), this, SLOT(updateLabelImageSize(QSize)));
     connect(_typeNameComboBox, SIGNAL(activated(QString)), _imageScene, SLOT(changeBoxTypeName(QString)));
 
+    connect(_copyAct, SIGNAL(triggered()), _imageScene, SLOT(copy()));
+    connect(_pasteAct, SIGNAL(triggered()), _imageScene, SLOT(paste()));
+    connect(_cutAct, SIGNAL(triggered()), _imageScene, SLOT(cut()));
+    connect(_imageScene, SIGNAL(selectionChanged()), this, SLOT(updateCopyCutActions()));
+//    connect(QApplication::clipboard(), SIGNAL(dataChanged()), _imageScene, SLOT(clipboardDataChanged()));
+    connect(QApplication::clipboard(), SIGNAL(dataChanged()), this, SLOT(updatePasteAction()));
+
+    _copyAct->setEnabled(false);
+    _pasteAct->setEnabled(false);
+    _cutAct->setEnabled(false);
+
     _imageScene->loadImage(imageFilePath);
     _isImageLoaded = true;
 
@@ -524,6 +575,11 @@ void MainWindow::displayImageView(QString imageFilePath)
 
     // init drawing status from _drawAct
     _imageScene->drawBoxItem(_drawAct->isChecked());
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+    fitViewToWindow();
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -584,7 +640,6 @@ void MainWindow::panImage(bool checked)
     _imageScene->panImage(checked);
 }
 
-
 void MainWindow::editTypeNameList()
 {
     TypeEditDialog* d = new TypeEditDialog(this, _typeNameFile, &_translator);
@@ -593,6 +648,20 @@ void MainWindow::editTypeNameList()
         delete d;
     }
 }
+
+void MainWindow::updateCopyCutActions()
+{
+    bool op = _imageScene->selectedItems().count() > 0;
+
+    _copyAct->setEnabled(op);
+    _cutAct->setEnabled(op);
+}
+
+void MainWindow::updatePasteAction()
+{
+    _pasteAct->setEnabled(true);
+}
+
 
 void MainWindow::zoomIn()
 {

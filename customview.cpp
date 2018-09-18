@@ -95,3 +95,35 @@ void CustomView::mouseMoveEvent(QMouseEvent *event)
     }
     QGraphicsView::mouseMoveEvent(event);
 }
+
+//void CustomView::fitInView(const QRectF &rect, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio)
+//{
+//    if (!scene() || rect.isNull())
+//        return;
+//    auto unity = transform().mapRect(QRectF(0, 0, 1, 1));
+//    if (unity.isEmpty())
+//        return;
+//    scale(1/unity.width(), 1/unity.height());
+//    auto viewRect = viewport()->rect();
+//    if (viewRect.isEmpty())
+//        return;
+//    auto sceneRect = transform().mapRect(rect);
+//    if (sceneRect.isEmpty())
+//        return;
+//    qreal xratio = viewRect.width() / sceneRect.width();
+//    qreal yratio = viewRect.height() / sceneRect.height();
+
+//    // Respect the aspect ratio mode.
+//    switch (aspectRatioMode) {
+//    case Qt::KeepAspectRatio:
+//        xratio = yratio = qMin(xratio, yratio);
+//        break;
+//    case Qt::KeepAspectRatioByExpanding:
+//        xratio = yratio = qMax(xratio, yratio);
+//        break;
+//    case Qt::IgnoreAspectRatio:
+//        break;
+//    }
+//    scale(xratio, yratio);
+//    centerOn(rect.center());
+//}

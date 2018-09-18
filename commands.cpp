@@ -4,40 +4,84 @@
 ** AddBoxCommand
 */
 
+AddBoxCommand::AddBoxCommand(QGraphicsScene *scene, QList<BoxItem *> *boxList, QUndoCommand *parent)
+    : QUndoCommand(parent)
+{
+    _scene = scene;
+    _boxList  = boxList;
+//    _boxList = new QList<BoxItem *>();
+//    for (int i=0; i<boxList.count(); i++) {
+//        BoxItem *box = qgraphicsitem_cast<BoxItem *>(boxList.at(i));
+//        _boxList->append(box);
+//    }
+}
+
 AddBoxCommand::AddBoxCommand(QGraphicsScene *scene, BoxItem *box, QUndoCommand *parent)
     : QUndoCommand(parent)
 {
     _scene = scene;
     _box = box;
+//    _boxList = new QList<BoxItem *>();
+//    for (int i=0; i<boxList.count(); i++) {
+//        BoxItem *box = qgraphicsitem_cast<BoxItem *>(boxList.at(i));
+//        _boxList->append(box);
+//    }
 }
 
 void AddBoxCommand::undo()
 {
-    _scene->removeItem(_box);
-    QApplication::setOverrideCursor(_box->oldCursor());
+    if (_box) {
+        _scene->removeItem(_box);
+        QApplication::setOverrideCursor(_box->oldCursor());
+    }
+    if (_boxList) {
+        for (int i=0; i<_boxList->count(); i++) {
+            BoxItem *item = _boxList->at(i);
+            _scene->removeItem(item);
+            QApplication::setOverrideCursor(item->oldCursor());
+        }
+    }
 }
 
 void AddBoxCommand::redo()
-{
-    _scene->addItem(_box);
-    _box->setSelected(true);
+{ 
+    //    QCursor c = Qt::CrossCursor;
+    //    _box->setOldCursor(c);
+    if (_boxList) {
+        for (int i=0; i<_boxList->count(); i++) {
+            BoxItem *item = _boxList->at(i);
+            if (!item->rect().isNull())
+                _scene->addItem(item);
+        }
+        reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_boxList, true);
+        //    for (int i=0; i<_boxList->count(); i++) {
+        //        BoxItem *item = _boxList->at(i);
+        //        if (!item->rect().isNull())
+        //            _scene->addItem(item);
+        //    }
+//        reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_boxList, true);
+    }
 
-    QCursor c = Qt::CrossCursor;
-    _box->setOldCursor(c);
+    if (_box) {
+        if (!_box->rect().isNull()) {
+            _scene->addItem(_box);
+            _box->setSelected(true);
+        }
+    }
 }
 
 /******************************************************************************
 ** RemoveBoxItemCommand
 */
 
-RemoveBoxesCommand::RemoveBoxesCommand(QGraphicsScene *scene, QList<BoxItem *> *boxList,
+RemoveBoxesCommand::RemoveBoxesCommand(QGraphicsScene *scene, QList<QGraphicsItem *> boxList,
                                         QUndoCommand *parent)
     : QUndoCommand(parent)
 {
     _scene = scene;
     _boxList = new QList<BoxItem *>();
-    for (int i=0; i<boxList->count(); i++) {
-        BoxItem *box = boxList->at(i);
+    for (int i=0; i<boxList.count(); i++) {
+        BoxItem *box = qgraphicsitem_cast<BoxItem *>(boxList.at(i));
         _boxList->append(box);
     }
 }
@@ -46,7 +90,8 @@ void RemoveBoxesCommand::undo()
 {
     for (int i=0; i<_boxList->count(); i++) {
         BoxItem *item = _boxList->at(i);
-        _scene->addItem(item);
+        if (!item->rect().isNull())
+            _scene->addItem(item);
     }
     reinterpret_cast<CustomScene *>(_scene)->selectBoxItems(_boxList, true);
 }
