@@ -134,6 +134,8 @@ void MainWindow::help()
 
 void MainWindow::about()
 {
+    sprintf(_aboutText, "<p><b>Image Labeler %d.%d.%d</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>",
+            VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD);
     _aboutMessageBox.about(this,
                            qApp->translate("MainWindow", "About Image Labeler"),
                            qApp->translate("MainWindow", _aboutText));

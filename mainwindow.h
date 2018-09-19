@@ -182,7 +182,7 @@ private:
                            "<b>Ctrl + A:</b> Select All Boxes<br />"
                            "<hr />"
                            "<b>Up/Down Arrow Key:</b> Switch images</p>";
-    const char *_aboutText = "<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>";
+    char _aboutText[1024] = {0};// = "<p><b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>";
 
     const QString _trHelpText = tr("<p>"
                            "Press <b>Right Mouse Button</b> on selected box to change target type.<br />"
@@ -194,7 +194,7 @@ private:
                            "<b>Ctrl + A:</b> Select All Boxes<br />"
                            "<hr />"
                            "<b>Up/Down Arrow Key:</b> Switch images</p>");
-    const QString _trAboutText = tr("<p>The <b>Image Labeler</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>");
+    const QString _trAboutText = tr("<p><b>Image Labeler 2.1.0</b> is based on Qt 5.10.1 and FreeImage 3.18.</p>");
 };
 //! [0]
 
