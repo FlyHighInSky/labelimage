@@ -135,7 +135,8 @@ private:
     QStringList _typeNameList;
     QString _languageFile;
     bool _isImageLoaded =  false;
-    QLabel *_labelCursorPos, *_labelImageSize, *_labelBoxInfo;
+    QString _selectedImageName;
+    QLabel *_labelImageInfo, *_labelImageIndex, *_labelCursorPos, *_labelBoxInfo;
     QPointF _cursorPos;
     QSize _imageSize;
     QRect _boxRect;

@@ -466,7 +466,7 @@ void MainWindow::retranslate()
 
     // status bar
     if (!_imageSize.isEmpty())
-        _labelImageSize->setText(QString(tr("Image: %1 x %2"))
+        _labelImageInfo->setText(QString(tr("Image: %1 x %2"))
                                  .arg(_imageSize.width())
                                  .arg(_imageSize.height())
                                  .toUtf8());
@@ -490,6 +490,8 @@ void MainWindow::createCentralWindow()
     _centralWidget = new QWidget(this);
     _horizontalLayout = new QHBoxLayout(_centralWidget);
     _fileListView = new QTreeView(this);
+//    _fileListView->setSortingEnabled(true);
+
     _imageView = new CustomView(this);
     _imageView->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
 
@@ -504,15 +506,19 @@ void MainWindow::createCentralWindow()
     _centralWidget->setLayout(_horizontalLayout);
     this->setCentralWidget(_centralWidget);
 
+    _labelImageIndex = new QLabel();
+    _labelImageInfo = new QLabel();
     _labelCursorPos = new QLabel();
-    _labelImageSize = new QLabel();
     _labelBoxInfo = new QLabel();
+
+    this->statusBar()->addPermanentWidget(new QLabel(), 1);
+    this->statusBar()->addPermanentWidget(_labelImageIndex, 1);
+    this->statusBar()->addPermanentWidget(new QLabel(), 1);
+    this->statusBar()->addPermanentWidget(_labelImageInfo, 1);
     this->statusBar()->addPermanentWidget(new QLabel(), 1);
     this->statusBar()->addPermanentWidget(_labelCursorPos, 1);
     this->statusBar()->addPermanentWidget(new QLabel(), 1);
     this->statusBar()->addPermanentWidget(_labelBoxInfo, 1);
-    this->statusBar()->addPermanentWidget(new QLabel(), 1);
-    this->statusBar()->addPermanentWidget(_labelImageSize, 1);
     this->statusBar()->addPermanentWidget(new QLabel(), 1);
 }
 
@@ -531,7 +537,18 @@ void MainWindow::updateActions()
 
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    displayImageView(_fileListModel->filePath(selected.indexes().first()));
+    QModelIndex index = selected.indexes().first();
+    displayImageView(_fileListModel->filePath(index));
+    _labelImageIndex->setText(QString("%1/%2")
+                              .arg(index.row()+1)
+                              .arg(_fileListModel->rowCount(_fileListView->rootIndex()))
+                              .toUtf8());
+    _selectedImageName = _fileListModel->fileName(index);
+    _labelImageInfo->setText(QString(tr("Image: %1 Size: %2 x %3"))
+                             .arg(_selectedImageName)
+                             .arg(_imageSize.width())
+                             .arg(_imageSize.height())
+                             .toUtf8());
 }
 
 void MainWindow::displayImageView(QString imageFilePath)
@@ -733,7 +750,8 @@ void MainWindow::fullScreen()
 void MainWindow::updateLabelImageSize(QSize imageSize)
 {
     _imageSize = imageSize;
-    _labelImageSize->setText(QString(tr("Image: %1 x %2"))
+    _labelImageInfo->setText(QString(tr("Image: %1 Size: %2 x %3"))
+                             .arg(_selectedImageName)
                              .arg(_imageSize.width())
                              .arg(_imageSize.height())
                              .toUtf8());
@@ -743,7 +761,7 @@ void MainWindow::updateBoxInfo(QRect rect, QString typeName)
 {
     _boxRect = rect;
     _boxTypeName = typeName;
-    _labelBoxInfo->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4, type-%5"))
+    _labelBoxInfo->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4, type: %5"))
                            .arg(_boxRect.left())
                            .arg(_boxRect.top())
                            .arg(_boxRect.width())
