@@ -51,7 +51,7 @@ void MainWindow::openFolder()
         }
 
         // init dirmodel
-        _filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp";
+        _filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.tif" << "*.tiff" << "*.bmp" << "*.ppm";
         _fileListModel = new QDirModel(_filters, QDir::Files | QDir::NoDotAndDotDot, QDir::Name, this);
 
         // init treeview and set model
@@ -85,6 +85,11 @@ void MainWindow::openFolder()
         _fileListView->setCurrentIndex(index);
         _drawAct->setEnabled(true);
         _panAct->setEnabled(true);
+
+        _editImageIndex->setValidator(new QIntValidator(1, _fileListModel->rowCount(_fileListView->rootIndex()), this));
+        _editImageIndex->setAlignment(Qt::AlignRight);
+        _editImageIndex->setHidden(false);
+        connect(_editImageIndex, SIGNAL(returnPressed()), this, SLOT(selectFile()));
     }
 }
 
@@ -507,11 +512,14 @@ void MainWindow::createCentralWindow()
     this->setCentralWidget(_centralWidget);
 
     _labelImageIndex = new QLabel();
+    _editImageIndex = new QLineEdit();
     _labelImageInfo = new QLabel();
     _labelCursorPos = new QLabel();
     _labelBoxInfo = new QLabel();
 
     this->statusBar()->addPermanentWidget(new QLabel(), 1);
+    this->statusBar()->addPermanentWidget(_editImageIndex, 1);
+    _editImageIndex->setHidden(true);
     this->statusBar()->addPermanentWidget(_labelImageIndex, 1);
     this->statusBar()->addPermanentWidget(new QLabel(), 1);
     this->statusBar()->addPermanentWidget(_labelImageInfo, 1);
@@ -535,12 +543,21 @@ void MainWindow::updateActions()
     _zoomOutAct->setEnabled(!_fitToWindowAct->isChecked());
 }
 
+void MainWindow::selectFile()
+{
+    int row = _editImageIndex->text().toInt();
+    QModelIndex index = _fileListModel->index(row-1, 0, _fileListView->rootIndex());
+    _fileListView->setCurrentIndex(index);
+}
+
 void MainWindow::onFileSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
     QModelIndex index = selected.indexes().first();
     displayImageView(_fileListModel->filePath(index));
-    _labelImageIndex->setText(QString("%1/%2")
-                              .arg(index.row()+1)
+
+    _editImageIndex->setText(QString("%1")
+                              .arg(index.row()+1));
+    _labelImageIndex->setText(QString("/%1")
                               .arg(_fileListModel->rowCount(_fileListView->rootIndex()))
                               .toUtf8());
     _selectedImageName = _fileListModel->fileName(index);

@@ -66,6 +66,8 @@
 #include "customview.h"
 #include <QMessageBox>
 #include <QUndoGroup>
+#include <QIntValidator>
+#include <QLineEdit>
 #include "typeeditdialog.h"
 
 QT_BEGIN_NAMESPACE
@@ -98,6 +100,7 @@ private slots:
     void fullScreen();
     void help();
     void about();
+    void selectFile();
     void onFileSelected(const QItemSelection& selected, const QItemSelection& deselected);
     void updateLabelImageSize(QSize imageSize);
     void updateLabelCursorPos(QPointF cursorPos);
@@ -137,6 +140,7 @@ private:
     bool _isImageLoaded =  false;
     QString _selectedImageName;
     QLabel *_labelImageInfo, *_labelImageIndex, *_labelCursorPos, *_labelBoxInfo;
+    QLineEdit *_editImageIndex;
     QPointF _cursorPos;
     QSize _imageSize;
     QRect _boxRect;
