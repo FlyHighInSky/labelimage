@@ -13,7 +13,6 @@
 #include <QCursor>
 #include <QStyle>
 #include <QStyleOptionGraphicsItem>
-#include "cornergrabber.h"
 #include <QMenu>
 #include <QApplication>
 

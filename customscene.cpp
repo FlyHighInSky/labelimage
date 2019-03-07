@@ -47,16 +47,16 @@ void CustomScene::clear()
 void CustomScene::loadImage(QString filename)
 {
     // Get image format
-    FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(filename.toStdString().c_str(), 0);
+    FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(filename.toLocal8Bit(), 0);
     if(fif == FIF_UNKNOWN)
-        fif = FreeImage_GetFIFFromFilename(filename.toStdString().c_str());
+        fif = FreeImage_GetFIFFromFilename(filename.toLocal8Bit());
     if(fif == FIF_UNKNOWN)
         return;
 
     // Load image if possible
     FIBITMAP *dib = nullptr;
     if(FreeImage_FIFSupportsReading(fif)) {
-        dib = FreeImage_Load(fif, filename.toStdString().c_str());
+        dib = FreeImage_Load(fif, filename.toLocal8Bit());
         if(dib == nullptr)
             return;
     } else
