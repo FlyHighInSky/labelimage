@@ -99,6 +99,7 @@ void MainWindow::saveImageNamesToFile(const QString fileName)
     QFile file(fileName);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
+    out.setCodec(QTextCodec::codecForName("utf-8"));
 
     QModelIndex rootIndex = _fileListView->rootIndex();
     int rowCount = _fileListModel->rowCount(rootIndex);
@@ -597,6 +598,21 @@ void MainWindow::displayImageView(QString imageFilePath)
     _imageScene->loadImage(imageFilePath);
     _isImageLoaded = true;
 
+    // init box info on the status bar
+    int boxCount = 0;
+    foreach (QGraphicsItem *item, _imageScene->items()) {
+        if (item->type() == QGraphicsItem::UserType+1) {
+            BoxItem *b = qgraphicsitem_cast<BoxItem *>(item);
+            b->setSelected(true);
+            boxCount++;
+            break;
+        }
+    }
+    if (boxCount == 0)
+    {
+        updateBoxInfo(QRect(), QString());
+    }
+
     _undoGroup->addStack(_imageScene->undoStack());
     _undoGroup->setActiveStack(_imageScene ? _imageScene->undoStack() : 0);
 
@@ -776,6 +792,12 @@ void MainWindow::updateLabelImageSize(QSize imageSize)
 
 void MainWindow::updateBoxInfo(QRect rect, QString typeName)
 {
+    if (typeName.isNull() || rect.isNull())
+    {
+        _labelBoxInfo->setText(QString(tr("Box: x- , y- , w- , h- , type: "))
+                   .toUtf8());
+        return;
+    }
     _boxRect = rect;
     _boxTypeName = typeName;
     _labelBoxInfo->setText(QString(tr("Box: x-%1, y-%2, w-%3, h-%4, type: %5"))

@@ -296,6 +296,7 @@ void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, 
         for (int i=TopLeft; i<=LeftCenter; i++) {
             painter->fillRect(_grabbers[i], QColor(255, 0, 0, 255));
         }
+        emit boxSelected(getRealRect(), _typeName);
     }
 
 //    _textRect.setPos(_rect.topLeft());
