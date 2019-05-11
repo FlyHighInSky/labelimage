@@ -2,7 +2,7 @@ TARGET = Image" "Labeler
 QT += widgets
 VERSION_MAJOR = 2
 VERSION_MINOR = 1
-VERSION_BUILD = 0
+VERSION_BUILD = 2
 
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\
@@ -37,7 +37,13 @@ SOURCES       = \
 RESOURCES += \
     labelimage.qrc
 
-win32: LIBS += -L$$PWD/lib/ -lFreeImage
+win32 {
+    LIBS += -L$$PWD/lib/ -lFreeImage
+}
+unix {
+    LIBS += -lFreeImage
+}
+
 
 DEPENDPATH += $$PWD/.
 
@@ -46,4 +52,6 @@ TRANSLATIONS += $$PWD/languages/zh_CN.ts \
 
 CODECFORSRC = UTF-8
 
-win32: RC_ICONS += images/draw.ico
+win32 {
+    RC_ICONS += images/draw.ico
+}

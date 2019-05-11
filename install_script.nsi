@@ -2,7 +2,7 @@
 
 ; 安装程序初始定义常量
 !define PRODUCT_NAME "Image Labeler"
-!define PRODUCT_VERSION "2.1.1"
+!define PRODUCT_VERSION "2.1.2"
 !define PRODUCT_PUBLISHER "Hu Jun"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Image Labeler.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
