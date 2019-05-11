@@ -24,14 +24,12 @@ public:
     CustomScene(QObject* parent = 0);
     ~CustomScene()
     {
-        if (_image) {
-            this->clear();
-        }
+        clearAll();
     }
 
     void loadImage(QString path);
     void saveToFile(const QString& path);
-    void clear();
+    void clearAll();
 
     void setTypeNameList (const QStringList &list)
     {

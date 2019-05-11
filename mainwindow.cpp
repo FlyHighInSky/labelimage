@@ -574,6 +574,7 @@ void MainWindow::displayImageView(QString imageFilePath)
     if (_imageScene) {
         delete _imageScene;
     }
+
     _imageScene = new CustomScene(this);
     _imageScene->setTypeNameList(_typeNameList);
     _imageScene->setTypeName(_typeNameComboBox->currentText());
@@ -609,9 +610,7 @@ void MainWindow::displayImageView(QString imageFilePath)
         }
     }
     if (boxCount == 0)
-    {
         updateBoxInfo(QRect(), QString());
-    }
 
     _undoGroup->addStack(_imageScene->undoStack());
     _undoGroup->setActiveStack(_imageScene ? _imageScene->undoStack() : 0);

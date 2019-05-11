@@ -13,7 +13,7 @@ CustomScene::CustomScene(QObject* parent):
 {
 }
 
-void CustomScene::clear()
+void CustomScene::clearAll()
 {
     saveBoxItemsToFile();
 
@@ -42,6 +42,9 @@ void CustomScene::clear()
         delete _undoStack;
         _undoStack = nullptr;
     }
+
+    this->items().clear();
+    this->clear();
 }
 
 void CustomScene::loadImage(QString filename)
@@ -65,11 +68,8 @@ void CustomScene::loadImage(QString filename)
     // Convert to 24bits and save to memory as JPEG
     FIMEMORY *stream = FreeImage_OpenMemory();
     // FreeImage can only save 24-bit highcolor or 8-bit greyscale/palette bitmaps as JPEG
-    dib = FreeImage_ConvertTo24Bits(dib);
-    FreeImage_SaveToMemory(FIF_JPEG, dib, stream);
-
-    // Free memory
-    FreeImage_Unload(dib);
+    FIBITMAP *dib1 = FreeImage_ConvertTo24Bits(dib);
+    FreeImage_SaveToMemory(FIF_JPEG, dib1, stream);
 
     // Load JPEG data
     BYTE *mem_buffer = nullptr;
@@ -77,24 +77,27 @@ void CustomScene::loadImage(QString filename)
     FreeImage_AcquireMemory(stream, &mem_buffer, &size_in_bytes);
 
     // Load raw data into QImage and return
-    QByteArray array = QByteArray::fromRawData((char*)mem_buffer, size_in_bytes);
+    QByteArray array = QByteArray::fromRawData((char*)mem_buffer, (int)size_in_bytes);
 
-    //    image = QImage::fromData(array);
     _image = new QImage();
     _image->loadFromData(array);
-
+    //_image = new QImage(filename);
     _pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*_image));
     _pixmapItem->setTransformationMode(Qt::SmoothTransformation);
     this->addItem(_pixmapItem);
 
     emit imageLoaded(_image->size());
-
     setSceneRect(_image->rect());
 
     // load box items
     QFileInfo info(filename);
     _boxItemFileName = info.path() + "/" + info.completeBaseName() + ".txt";
     loadBoxItemsFromFile();
+
+    array.clear();
+    FreeImage_CloseMemory(stream);
+    FreeImage_Unload(dib);
+    FreeImage_Unload(dib1);
 }
 
 void CustomScene::loadBoxItemsFromFile()
@@ -340,7 +343,7 @@ void CustomScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                     _boxItem->setOldCursor(c);
                     _undoStack->push(new AddBoxCommand(this, _boxItem));
                 }
-                _boxItem = 0;
+                _boxItem = nullptr;
                 return;
             }
         }

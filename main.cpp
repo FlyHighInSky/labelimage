@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include "mainwindow.h"
+#include "C:/Program Files (x86)/Visual Leak Detector/include/vld.h"
 int main(int argc, char *argv[])
 {
 //    Q_IMPORT_PLUGIN( qtiff );
