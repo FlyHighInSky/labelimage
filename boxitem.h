@@ -98,7 +98,7 @@ signals:
 private:
 
     virtual QRectF boundingRect() const;
-    void BoxItem::paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint (QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     virtual void hoverEnterEvent ( QGraphicsSceneHoverEvent *event );
     virtual void hoverLeaveEvent ( QGraphicsSceneHoverEvent *event );
     virtual void hoverMoveEvent (QGraphicsSceneHoverEvent * event);

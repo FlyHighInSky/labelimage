@@ -4,6 +4,7 @@ VERSION_MAJOR = 2
 VERSION_MINOR = 1
 VERSION_BUILD = 2
 
+
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
        "VERSION_MINOR=$$VERSION_MINOR"\
        "VERSION_BUILD=$$VERSION_BUILD"
@@ -41,7 +42,11 @@ win32 {
     LIBS += -L$$PWD/lib/ -lFreeImage
 }
 unix {
-    LIBS += -lFreeImage
+    LIBS += -L$$PWD/lib/ -lfreeimage -ltiff
+    # install
+    target.source = $$TARGET
+    target.path = /usr/bin
+    INSTALLS = target
 }
 
 

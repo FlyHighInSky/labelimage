@@ -157,8 +157,7 @@ void MainWindow::createActions()
     _fileToolBar = addToolBar(tr("File"));
 
     // open folder
-    const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(":/images/folder.png"));
-    _openAct = new QAction(openIcon, tr("&Open Folder..."), this);
+    _openAct = new QAction(QIcon(":/images/folder.png"), tr("&Open Folder..."), this);
     _openAct->setShortcuts(QKeySequence::Open);
     _openAct->setStatusTip(tr("Open an image folder"));
     connect(_openAct, &QAction::triggered, this, &MainWindow::openFolder);
@@ -166,8 +165,7 @@ void MainWindow::createActions()
     _fileToolBar->addAction(_openAct);
 
     // quit
-    const QIcon exitIcon = QIcon::fromTheme("application-exit", QIcon(":/images/quit.png"));
-    _exitAct = _fileMenu->addAction(exitIcon, tr("E&xit"), qApp, &QApplication::closeAllWindows);
+    _exitAct = _fileMenu->addAction(QIcon(":/images/quit.png"), tr("E&xit"), qApp, &QApplication::closeAllWindows);
     _exitAct->setShortcut(tr("Ctrl+Q"));
     _exitAct->setStatusTip(tr("Exit the application"));
     _fileMenu->addAction(_exitAct);
@@ -269,8 +267,7 @@ void MainWindow::createActions()
     _viewToolBar->addAction(_panAct);
 
     // zoom in
-    const QIcon zoomInIcon = QIcon::fromTheme("document-open", QIcon(":/images/zoom-in.png"));
-    _zoomInAct = new QAction(zoomInIcon, tr("Zoom &In"), this);
+    _zoomInAct = new QAction(QIcon(":/images/zoom-in.png"), tr("Zoom &In"), this);
     _zoomInAct->setShortcut(QKeySequence::ZoomIn);
     _zoomInAct->setStatusTip(tr("Zoom In Image"));
     connect(_zoomInAct, &QAction::triggered, this, &MainWindow::zoomIn);
@@ -278,8 +275,7 @@ void MainWindow::createActions()
     _viewToolBar->addAction(_zoomInAct);
 
     // zoom out
-    const QIcon zoomOutIcon = QIcon::fromTheme("document-open", QIcon(":/images/zoom-out.png"));
-    _zoomOutAct = new QAction(zoomOutIcon, tr("Zoom &Out"), this);
+    _zoomOutAct = new QAction(QIcon(":/images/zoom-out.png"), tr("Zoom &Out"), this);
     _zoomOutAct->setShortcut(QKeySequence::ZoomOut);
     _zoomOutAct->setStatusTip(tr("Zoom Out Image"));
     connect(_zoomOutAct, &QAction::triggered, this, &MainWindow::zoomOut);
@@ -287,8 +283,7 @@ void MainWindow::createActions()
     _viewToolBar->addAction(_zoomOutAct);
 
     // fit to window
-    const QIcon fitInIcon = QIcon::fromTheme("document-open", QIcon(":/images/fit-to-window.png"));
-    _fitToWindowAct = new QAction(fitInIcon, tr("&Fit To Window"), this);
+    _fitToWindowAct = new QAction(QIcon(":/images/fit-to-window.png"), tr("&Fit To Window"), this);
     _fitToWindowAct->setShortcut(tr("Ctrl+F"));
     _fitToWindowAct->setStatusTip(tr("Fit View To Window"));
     connect(_fitToWindowAct, &QAction::triggered, this, &MainWindow::fitViewToWindow);
@@ -298,8 +293,7 @@ void MainWindow::createActions()
     _viewToolBar->addAction(_fitToWindowAct);
 
     // actual size
-    const QIcon actualSizeIcon = QIcon::fromTheme("document-open", QIcon(":/images/actual-size.png"));
-    _actualSizeAct = new QAction(actualSizeIcon, tr("&Actual Size"), this);
+    _actualSizeAct = new QAction(QIcon(":/images/actual-size.png"), tr("&Actual Size"), this);
     _actualSizeAct->setShortcut(tr("Ctrl+R"));
     _actualSizeAct->setStatusTip(tr("Fit View To Actual Size"));
     connect(_actualSizeAct, &QAction::triggered, this, &MainWindow::fitViewToActual);
@@ -309,8 +303,7 @@ void MainWindow::createActions()
     _viewMenu->addSeparator();
 
     // full screen
-    const QIcon fullscreenIcon = QIcon::fromTheme("document-open", QIcon(":/images/fullscreen.png"));
-    _fullscreenAct = new QAction(fullscreenIcon, tr("&Full Screen"), this);
+    _fullscreenAct = new QAction(QIcon(":/images/fullscreen.png"), tr("&Full Screen"), this);
     _fullscreenAct->setShortcut(tr("Alt+Enter"));
     _fullscreenAct->setStatusTip(tr("Full Screen"));
     connect(_fullscreenAct, &QAction::triggered, this, &MainWindow::fullScreen);
@@ -322,37 +315,32 @@ void MainWindow::createActions()
     _helpToolBar = addToolBar(tr("Help"));
 
     // language
-    _languageMenu = _helpMenu->addMenu(
-                QIcon::fromTheme("document-open", QIcon(":/images/language.png")), tr("&Language"));
+    _languageMenu = _helpMenu->addMenu(QIcon(":/images/language.png"), tr("&Language"));
     _languageMenu->setStatusTip(tr("Select language"));
 
     // Chinese
-    _zhCNAct = _languageMenu->addAction(
-                QIcon::fromTheme("document-open", QIcon(":/images/zh_CN.png")),
+    _zhCNAct = _languageMenu->addAction(QIcon(":/images/zh_CN.png"),
                 tr("&Chinese"));
     _languageMenu->addAction(_zhCNAct);
     _helpToolBar->addAction(_zhCNAct);
     connect(_zhCNAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
     // English
-    _enUSAct = _languageMenu->addAction(
-                QIcon::fromTheme("document-open", QIcon(":/images/en_US.png")),
+    _enUSAct = _languageMenu->addAction(QIcon(":/images/en_US.png"),
                 tr("&English"));
     _languageMenu->addAction(_enUSAct);
     _helpToolBar->addAction(_enUSAct);
     connect(_enUSAct, &QAction::triggered, this, &MainWindow::switchLanguage);
 
     // help
-    _helpAct = _helpMenu->addAction(
-                QIcon::fromTheme("document-open", QIcon(":/images/help.png")),
+    _helpAct = _helpMenu->addAction(QIcon(":/images/help.png"),
                 tr("&Help"), this, &MainWindow::help);
     _helpAct->setStatusTip(tr("Help"));
     _helpAct->setShortcut(QKeySequence::HelpContents);
     _helpToolBar->addAction(_helpAct);
 
     // about
-    _aboutAct = _helpMenu->addAction(
-                QIcon::fromTheme("document-open", QIcon(":/images/about.png")),
+    _aboutAct = _helpMenu->addAction(QIcon(":/images/about.png"),
                 tr("&About"), this, &MainWindow::about);
     _aboutAct->setStatusTip(tr("About Image Labeler"));
     _helpToolBar->addAction(_aboutAct);
